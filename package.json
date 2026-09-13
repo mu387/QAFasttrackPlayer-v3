@@ -1,0 +1,60 @@
+{
+  "name": "qafasttrack-local-player",
+  "productName": "QAFastTrack Local Player",
+  "version": "1.0.24",
+  "description": "My Electron application description",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "npx electronmon .",
+    "start": "electron-forge start",
+    "start:staging": "cross-env APP_ENV=staging env-cmd -f .env.staging electron-forge start",
+    "start:local": "cross-env APP_ENV=local env-cmd -f .env.local electron-forge start",
+    "start:prod": "cross-env APP_ENV=prod env-cmd -f .env.prod electron-forge start",
+    "package": "electron-forge package",
+    "package:local": "cross-env APP_ENV=local env-cmd -f .env.local electron-forge package",
+    "package:staging": "cross-env APP_ENV=staging env-cmd -f .env.staging electron-forge package",
+    "package:prod": "cross-env APP_ENV=prod env-cmd -f .env.prod electron-forge package",
+    "make": "electron-forge make",
+    "make:local": "cross-env APP_ENV=local env-cmd -f .env.local electron-forge make",
+    "make:staging": "cross-env APP_ENV=staging env-cmd -f .env.staging electron-forge make",
+    "make:prod": "cross-env APP_ENV=prod env-cmd -f .env.prod electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\"",
+    "test:api-regression": "node scripts/api_engine_regression.js && node scripts/api_parity_smoke.js",
+    "prettier": "prettier --config .prettierrc --check \"./**/*.{ts,tsx,js,jsx}\"",
+    "prettier:fix": "prettier --config .prettierrc --write \"./**/*.{ts,tsx,js,jsx}\""
+  },
+  "keywords": [],
+  "author": {
+    "name": "Alize Ahmed",
+    "email": "buttfaizan1@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@electron-forge/maker-dmg": "^7.4.0",
+    "axios": "^1.3.4",
+    "axios-retry": "^3.4.0",
+    "colors": "^1.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "electron-squirrel-startup": "^1.0.0",
+    "env-cmd": "^10.1.0",
+    "express": "^4.18.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.10.2",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^1.1.1",
+    "prettier": "^3.2.5",
+    "selenium-webdriver": "^4.8.1",
+    "webdriverio": "^8.26.1"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.5",
+    "@electron-forge/maker-deb": "^6.0.5",
+    "@electron-forge/maker-rpm": "^6.0.5",
+    "@electron-forge/maker-squirrel": "^6.0.5",
+    "@electron-forge/maker-zip": "^6.0.5",
+    "cross-env": "7",
+    "electron": "23.1.4"
+  }
+}

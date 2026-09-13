@@ -1,0 +1,1039 @@
+<!doctype html>
+<html class="dark">
+
+<head id="head">
+  <meta charset="UTF-8" />
+  <title>QA Fast Track Automation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Enterprise palette — professional blue accent, standard slate neutrals.
+    // NOTE: must run AFTER the CDN script so `tailwind` exists.
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyan: {
+              300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb',
+              700: '#1d4ed8', 800: '#1e40af', 900: '#172554',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <link href="./style.css" rel="stylesheet">
+
+</head>
+
+<body class="bg-whit !bg-neutral-150 dark:!text-slate-400">
+
+  <!-- Splash Screen -->
+  <div id="qaf-splash" class="active">
+    <div class="qaf-logo-wrap">
+      <img src="./qafasttrackwhite.svg" alt="QA Fast Track" class="qaf-logo" />
+      <div class="qaf-orbit">
+        <span class="qaf-dot qaf-dot1"></span>
+        <span class="qaf-dot qaf-dot2"></span>
+        <span class="qaf-dot qaf-dot3"></span>
+      </div>
+    </div>
+    <p class="qaf-tagline">Preparing your automation cockpit…</p>
+    <div class="qaf-progress">
+      <div class="qaf-progress-bar" id="qaf-progress-bar"></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const hideSplash = () => {
+        const splash = document.getElementById('qaf-splash');
+        if (!splash) return;
+        splash.classList.remove('active');
+        splash.style.opacity = '0';
+        splash.style.pointerEvents = 'none';
+        setTimeout(() => {
+          if (splash.parentNode) splash.parentNode.removeChild(splash);
+        }, 260);
+      };
+
+      window.setTimeout(hideSplash, 2500);
+      window.addEventListener('DOMContentLoaded', () => {
+        window.setTimeout(hideSplash, 1200);
+      }, { once: true });
+    })();
+  </script>
+
+  <!-- Sidebar -->
+  <aside class="sidebar !bg-neutral-800 dark:!bg-slate-950" id="sidebar">
+    <div class="header border-b pb-3">
+      <img src="./qafasttrackwhite.svg" width="90%" alt="logo" class="img-fluid mx-auto ">
+
+    </div>
+
+    <nav>
+
+      <span class="text-white-50 px-3 py-2 block text-xs">Actions</span>
+      <ul class="divide-y divide-solid">
+        <li class=" nav-link bg-green-900 hover:!bg-green-700 dark:!text-slate-200 text-base border-t-0 d-flex align-items-center justify-content-between gap-2 d-none hidden" id="appiumServerToggle">
+          <span class="d-flex align-items-center gap-1">
+            <i class="bi bi-play-fill" id="appiumServerIcon"></i>
+          <span id="appiumServerLabel">Start Appium Server</span>
+          </span>
+        </li>
+        <li class=" nav-link bg-green-900 hover:!bg-green-700 dark:!text-slate-200 text-base border-t-0 d-none hidden" id="startWinAppServer"><i
+            class="bi bi-play-fill"></i> <span>
+            Start WinApp Server</span></li>
+        <li class=" nav-link bg-red-900 hidden hover:!bg-red-700 dark:!text-slate-200 text-base d-none" id="stopWinAppServer"><i
+            class="bi bi-stop-circle"></i> <span> Stop WinApp Server</span></li>
+        <li class=" nav-link dark:!text-slate-200 bg-yellow-900 hover:!bg-yellow-700 text-base hidden d-none" id="pause"><i
+            class="bi bi-pause"></i> <span> Pause
+            Execution</span></li>
+        <li class=" nav-link dark:!text-slate-200 bg-red-900 hover:!bg-red-700 text-base hidden d-none" id="stopExecution"><i
+            class="bi bi-stop-circle"></i> <span> Stop
+            Execution</span></li>
+        <li class=" nav-link dark:!text-slate-200 text-base hidden bg-blue-900 hover:!bg-blue-700 " id="resume"><i
+            class="bi bi-repeat"></i> <span> Resume
+            Execution</span></li>
+        <li class=" nav-link dark:!text-slate-400 text-base flex items-center gap-2" id="captureXpath">
+          <div id="spyIndicator" class="h-3 w-3 rounded-full bg-gray-400"></div>
+          <span>Spy Objects</span>
+        </li>
+        <li class=" nav-link dark:!text-slate-400 text-base flex items-center gap-2" id="devToolsRow">
+          <span>Developer Tools</span>
+          <div class="d-flex align-items-center gap-1 ms-auto">
+            <button class="btn btn-outline-secondary btn-sm" id="forceReloadBtn" title="Force reload">
+              <i class="bi bi-arrow-repeat"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" id="toggleDevToolsBtn" title="Toggle DevTools">
+              <i class="bi bi-braces"></i>
+            </button>
+          </div>
+        </li>
+        <li class="nav-link dark:!text-slate-400 text-base d-flex align-items-center justify-content-between gap-2">
+          <span>Allow Recovery</span>
+          <div class="form-check form-switch m-0">
+            <input class="form-check-input" type="checkbox" id="allowRecoveryToggle">
+          </div>
+        </li>
+        <li class="nav-link dark:!text-slate-400 text-base flex items-center gap-2"
+          data-bs-toggle="modal" data-bs-target="#deviceSetupModal">
+          <i class="bi bi-pc-display"></i>
+          <span>Setup Device</span>
+        </li>
+        <li class="nav-link dark:!text-slate-400 text-base flex items-center gap-2" id="openApiCallsWorkspace">
+          <i class="bi bi-diagram-3"></i>
+          <span>API Calls</span>
+        </li>
+        <li class="nav-link dark:!text-slate-400 text-base flex items-center gap-2 hidden" id="openAdvancedSpyWorkspace">
+          <i class="bi bi-bullseye"></i>
+          <span>Advanced Spy</span>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content dark:bg-slate-900" id="mainContent">
+
+
+    <!-- Main Card -->
+    <div class="card main-card p-0 dark:bg-slate-900 dark:!text-slate-400">
+      <div class="card-header border-b border-slate-700 py-3">
+        <!-- Main Header -->
+        <header class="">
+          <div class=" flex align-items-center gap-3">
+            <div class="d-flex flex-fill gap-4 align-items-center">
+              <button class="toggle-btn" id="openSidebarBtn">☰</button>
+              <div class="form-check mb-0">
+                <input class="form-check-input mt-1.5" type="checkbox" value="" id="reExecute">
+                <label class="form-check-label cursor-pointer  dark:!text-slate-400 text-lg" for="reExecute">
+                  Re-Execute Fail Step
+                </label>
+              </div>
+              <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+                <input class="form-check-input" type="checkbox" id="highlightToggle" checked>
+                <label class="form-check-label cursor-pointer dark:!text-slate-400 text-sm" for="highlightToggle">
+                  Highlight elements
+                </label>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <label class="form-check-label cursor-pointer dark:!text-slate-400 text-sm mb-0" for="executionDelayInput">
+                  Execution Delay
+                </label>
+                <input
+                  class="form-control form-control-sm w-24 dark:bg-slate-900 dark:!text-slate-200 dark:border-slate-700"
+                  type="number"
+                  id="executionDelayInput"
+                  min="0"
+                  step="50"
+                  value="200">
+                <span class="dark:!text-slate-400 text-sm">ms</span>
+              </div>
+              <button id="resumeFailedStepBtn" class="btn btn-outline-warning btn-sm hidden d-none">
+                Resume Failed Step
+              </button>
+            </div>
+            <div class=" d-flex flex-fill justify-content-end align-items-center">
+              <select id="screenDropdown"
+                class="w-48 appearance-none mr-4 h-10 forced-colors:appearance-auto border rounded-lg bg-slate-50 dark:bg-slate-900 hover:border-cyan-500 dark:hover:border-cyan-700 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-200 px-2"
+                aria-label="Default select example">
+                <option selected>Select Screen</option>
+              </select>
+              <div id="serverNotRunning" class="loader" data-bs-toggle="tooltip" data-bs-placement="top"
+                data-bs-custom-class="bg-danger" data-bs-title="Server Status: Not Running">
+                <span class="bar bg-red-500"></span>
+                <span class="bar bg-red-600"></span>
+                <span class="bar bg-red-500"></span>
+              </div>
+
+              <div id="serverIsRunning" class="loader hidden" data-bs-toggle="tooltip" data-bs-placement="top"
+                data-bs-custom-class="bg-success" data-bs-title="Server Status: Running">
+                <span class="bar bg-green-500"></span>
+                <span class="bar bg-green-600"></span>
+                <span class="bar bg-green-500"></span>
+              </div>
+
+            </div>
+          </div>
+
+        </header>
+      </div>
+      <div class="card-body flex flex-column p-2">
+        <div id="apiWorkspace" class="hidden my-2">
+          <div class="rounded-4 border border-slate-400 dark:!border-slate-800 bg-slate-200 dark:!bg-slate-900 p-3 shadow-sm api-workspace-shell">
+            <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap api-workspace-title-strip">
+              <div>
+                <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">API Calls</div>
+                <h2 class="mb-0 text-2xl font-semibold text-slate-900 dark:text-slate-100">Dedicated API Workspace</h2>
+              </div>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="closeApiWorkspaceBtn">Back to Runner</button>
+            </div>
+
+            <div id="apiWorkspaceBasicView" class="api-workspace-basic-view mt-3">
+              <div class="api-basic-top-strip">
+                <div class="api-basic-card-row">
+                  <button type="button" id="apiWorkspaceBasicBrowserBtn" class="api-basic-card-btn">
+                    <span id="apiWorkspaceBasicBrowserDot" class="api-basic-dot"></span>
+                    <span class="api-basic-card-copy">
+                      <span class="api-basic-card-k">Step 1</span>
+                      <span id="apiWorkspaceBasicBrowserText" class="api-basic-card-v">Start Browser</span>
+                    </span>
+                  </button>
+
+                  <button type="button" class="api-basic-card-btn" id="apiWorkspaceBasicLoginBtn" disabled>
+                    <span class="api-basic-dot api-basic-dot-beat"></span>
+                    <span class="api-basic-card-copy">
+                      <span class="api-basic-card-k">Step 2</span>
+                      <span class="api-basic-card-v">Login / SSO</span>
+                    </span>
+                  </button>
+
+                  <button type="button" id="apiWorkspaceBasicCaptureBtn" class="api-basic-card-btn api-basic-card-primary">
+                    <span id="apiWorkspaceBasicCaptureDot" class="api-basic-dot api-basic-dot-rec"></span>
+                    <span class="api-basic-card-copy">
+                      <span class="api-basic-card-k">Step 3</span>
+                      <span id="apiWorkspaceBasicCaptureText" class="api-basic-card-v">Start Recording</span>
+                    </span>
+                  </button>
+                </div>
+                <button type="button" id="apiWorkspaceViewToggleBtn" class="btn btn-outline-secondary btn-sm">Advanced View</button>
+              </div>
+
+              <div class="row g-3 mt-1">
+                <div class="col-lg-6">
+                  <div class="rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-900 p-3 h-100 shadow-sm api-workspace-panel">
+                    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                      <div>
+                        <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">Captured Requests</div>
+                        <div id="apiWorkspaceBasicCaptureStatus" class="mt-1 text-sm text-slate-600 dark:text-slate-400">Capture inactive</div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <label for="apiWorkspaceBasicCaptureTypeFilter" class="text-xs uppercase tracking-[0.2em] text-slate-500 font-semibold mb-0">Type</label>
+                        <select id="apiWorkspaceBasicCaptureTypeFilter"
+                          class="appearance-none forced-colors:appearance-auto border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200 px-2 h-9 min-w-[140px]">
+                          <option value="xhr_fetch" selected>XHR/Fetch</option>
+                          <option value="all">All</option>
+                          <option value="xhr">XHR</option>
+                          <option value="fetch">Fetch</option>
+                          <option value="document">Document</option>
+                          <option value="script">Script</option>
+                          <option value="stylesheet">Stylesheet</option>
+                          <option value="image">Image</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div id="apiWorkspaceBasicCaptureList"
+                      class="mt-3 max-h-[520px] overflow-auto rounded border border-slate-200 dark:!border-slate-700 bg-slate-50 dark:!bg-slate-950 p-2 text-xs text-slate-700 dark:text-slate-200">
+                      <div class="text-slate-400">No captured requests yet.</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-6">
+                  <div class="rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-900 p-3 h-100 shadow-sm api-workspace-panel">
+                    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                      <div>
+                        <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">Response</div>
+                        <div id="apiWorkspaceBasicResponseMeta" class="mt-1 text-sm text-slate-600 dark:text-slate-400">No API response yet.</div>
+                      </div>
+                      <span id="apiWorkspaceBasicResponseBadge" class="badge bg-secondary">Idle</span>
+                    </div>
+                    <div class="btn-group btn-group-sm mt-3 api-workspace-tabs" role="group" aria-label="API workspace tabs">
+                      <button type="button" class="btn btn-outline-secondary apiWorkspaceBasicTabBtn active" data-tab="json">JSON</button>
+                      <button type="button" class="btn btn-outline-secondary apiWorkspaceBasicTabBtn" data-tab="body">Body</button>
+                      <button type="button" class="btn btn-outline-secondary apiWorkspaceBasicTabBtn" data-tab="xml">XML</button>
+                      <button type="button" class="btn btn-outline-secondary apiWorkspaceBasicTabBtn" data-tab="headers">Headers</button>
+                      <button type="button" class="btn btn-outline-secondary apiWorkspaceBasicTabBtn" data-tab="raw">Raw</button>
+                      <button type="button" class="btn btn-outline-secondary apiWorkspaceBasicTabBtn" data-tab="assertions">Assertions</button>
+                    </div>
+                    <pre id="apiWorkspaceBasicResponseContent" class="mt-3 whitespace-pre-wrap break-words rounded bg-slate-50 dark:!bg-slate-950 p-3 text-[11px] text-slate-700 dark:text-slate-200 max-h-[360px] overflow-auto">No response yet.</pre>
+                    <div id="apiWorkspaceBasicAssertionResultsPanel" class="mt-3 d-none flex-column gap-2 max-h-[360px] overflow-auto"></div>
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                      <textarea id="apiWorkspaceBasicAssertionsInput" rows="2" placeholder="status=200||json.success=true"
+                        class="flex-1 min-h-[44px] p-2 border rounded-lg bg-slate-50 dark:!bg-slate-950 border-slate-400 dark:border-slate-700 text-sm text-slate-800 placeholder:text-slate-500 dark:text-slate-200 resize-none"></textarea>
+                      <button type="button" class="btn btn-primary btn-sm" id="apiWorkspaceBasicRunAssertionsBtn">Run Assertions</button>
+                    </div>
+                    <div id="apiWorkspaceBasicAssertionSummary" class="mt-2 text-xs text-slate-500 dark:text-slate-400">Results appear under the Assertions tab after you run them.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="apiWorkspaceAdvancedView">
+            <div class="mt-3 rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-950 p-2 shadow-sm api-workspace-toolbar">
+              <div class="row g-2 align-items-center">
+                <div class="col-md-1">
+                  <select id="apiWorkspaceMethod"
+                    class="appearance-none forced-colors:appearance-auto border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-base text-slate-800 dark:text-slate-200 px-3 w-full h-10">
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <input type="text" id="apiWorkspaceUrl" placeholder="Enter API URL"
+                    class="w-full h-10 px-3 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-base text-slate-800 placeholder:text-slate-500 dark:text-slate-200">
+                </div>
+                <div class="col-md-1">
+                  <select id="apiWorkspaceProtocol"
+                    class="appearance-none forced-colors:appearance-auto border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-base text-slate-800 dark:text-slate-200 px-3 w-full h-10">
+                    <option value="rest" selected>REST</option>
+                    <option value="soap">SOAP</option>
+                  </select>
+                </div>
+                <div class="col-md-1">
+                  <select id="apiWorkspaceMode"
+                    class="appearance-none forced-colors:appearance-auto border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-base text-slate-800 dark:text-slate-200 px-3 w-full h-10">
+                    <option>auto</option>
+                    <option>browser_session</option>
+                    <option>session_http</option>
+                  </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-center">
+                  <div id="apiWorkspaceOpenApiToggleWrap" class="form-check api-workspace-openapi-inline">
+                    <input class="form-check-input" type="checkbox" id="apiWorkspaceOpenApiToggle">
+                    <label class="form-check-label text-xs text-slate-600 dark:text-slate-300 mb-0" for="apiWorkspaceOpenApiToggle">OpenAPI Import</label>
+                  </div>
+                </div>
+                <div class="col-md-2 d-flex gap-2 justify-content-end flex-nowrap">
+                  <button type="button" class="btn btn-primary px-4 whitespace-nowrap" id="apiWorkspaceRunBtn">Run</button>
+                  <button type="button" class="btn btn-outline-secondary whitespace-nowrap" id="apiWorkspaceResetBtn">Reset</button>
+                  <button type="button" class="btn btn-outline-secondary whitespace-nowrap" id="apiWorkspaceReportBtn">Full Report</button>
+                </div>
+              </div>
+
+              <div id="apiWorkspaceSoapWsdlRow" class="row g-2 mt-2 d-none">
+                <div class="col-md-4">
+                  <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">WSDL URL</label>
+                  <input type="text" id="apiWorkspaceWsdlUrl"
+                    class="w-full h-10 px-3 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200"
+                    placeholder="https://example.com/service?wsdl">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">WSDL Auth</label>
+                  <select id="apiWorkspaceWsdlAuth"
+                    class="appearance-none forced-colors:appearance-auto border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-base text-slate-800 dark:text-slate-200 px-3 w-full h-10">
+                    <option value="none" selected>none</option>
+                    <option value="basic">basic</option>
+                    <option value="bearer">bearer</option>
+                  </select>
+                </div>
+
+
+                <div class="col-md-2">
+                  <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">WSDL File</label>
+                  <input type="text" id="apiWorkspaceWsdlFile"
+                    class="w-full h-10 px-3 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200"
+                    placeholder="service.wsdl">
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="apiWorkspaceWsdlChooseBtn">Choose File</button>
+                  <button type="button" class="btn btn-primary btn-sm" id="apiWorkspaceWsdlImportBtn">Import WSDL</button>
+                </div>
+              </div>
+
+                            <div id="apiWorkspaceOpenApiRow" class="row g-2 mt-2 d-none">
+                <div class="col-md-3">
+                  <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">OpenAPI URL</label>
+                  <input type="text" id="apiWorkspaceOpenApiUrl"
+                    class="w-full h-10 px-3 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200"
+                    placeholder="https://example.com/openapi.json">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">OpenAPI File</label>
+                  <input type="text" id="apiWorkspaceOpenApiFile"
+                    class="w-full h-10 px-3 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200"
+                    placeholder="openapi.json">
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="apiWorkspaceOpenApiChooseBtn">Choose File</button>
+                  <button type="button" class="btn btn-primary btn-sm" id="apiWorkspaceOpenApiImportBtn">Import OpenAPI</button>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Operation</label>
+                  <select id="apiWorkspaceOpenApiOperation"
+                    class="appearance-none forced-colors:appearance-auto border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-base text-slate-800 dark:text-slate-200 px-3 w-full h-10">
+                    <option value="">No operation imported</option>
+                  </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="apiWorkspaceOpenApiApplyBtn">Apply Operation</button>
+                </div>
+              </div>
+              <div class="row g-2 mt-1" id="apiWorkspaceRequestFieldsRow">
+                <div class="col-md-4">
+                  <label id="apiWorkspaceQueryLabel" class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Query JSON</label>
+                  <textarea id="apiWorkspaceQuery" rows="2"
+                    class="w-full p-2 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">{}</textarea>
+                </div>
+                <div class="col-md-4">
+                  <label id="apiWorkspaceBodyLabel" class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Body JSON / text</label>
+                  <textarea id="apiWorkspaceBodyInput" rows="2"
+                    class="w-full p-2 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">{}</textarea>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Headers JSON</label>
+                  <textarea id="apiWorkspaceHeadersInput" rows="2"
+                    class="w-full p-2 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">{"Accept":"application/json"}</textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-2 rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-950 p-2 shadow-sm api-workspace-session">
+              <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                <div>
+                  <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">Session Strip</div>
+                  <div id="apiWorkspaceStatusText" class="mt-1 text-sm text-slate-700 dark:text-slate-300">Browser inactive - Capture inactive - No response yet</div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button type="button" class="btn btn-outline-secondary btn-sm api-session-guide-btn" id="apiWorkspaceLaunchBrowserBtn" data-guide-label="Step 1">Launch Browser</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm api-session-guide-btn" id="apiWorkspaceSessionLoginBtn" data-guide-label="Step 2" disabled>Login / SSO</button>
+                  <button type="button" class="btn btn-outline-success btn-sm api-session-guide-btn" id="apiWorkspaceStartCaptureBtn" data-guide-label="Step 3">Start Recording</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm api-session-utility-btn" id="apiWorkspaceRefreshCaptureBtn">Refresh</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" id="apiWorkspaceStopCaptureBtn">Stop Capture</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3 row g-3">
+              <div class="col-lg-7">
+                <div class="rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-900 p-3 h-100 shadow-sm api-workspace-panel api-workspace-response-panel">
+                  <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                    <div>
+                      <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">Response</div>
+                      <div id="apiWorkspaceResponseMeta" class="mt-1 text-sm text-slate-600 dark:text-slate-400">No API response yet.</div>
+                    </div>
+                    <span id="apiWorkspaceResponseBadge" class="badge bg-secondary">Idle</span>
+                  </div>
+                  <div class="btn-group btn-group-sm mt-3 api-workspace-tabs" role="group" aria-label="API workspace tabs">
+                    <button type="button" class="btn btn-outline-secondary apiWorkspaceTabBtn active" data-tab="json">JSON</button>
+                    <button type="button" class="btn btn-outline-secondary apiWorkspaceTabBtn" data-tab="body">Body</button>
+                    <button type="button" class="btn btn-outline-secondary apiWorkspaceTabBtn" data-tab="xml">XML</button>
+                    <button type="button" class="btn btn-outline-secondary apiWorkspaceTabBtn" data-tab="headers">Headers</button>
+                    <button type="button" class="btn btn-outline-secondary apiWorkspaceTabBtn" data-tab="raw">Raw</button>
+                    <button type="button" class="btn btn-outline-secondary apiWorkspaceTabBtn" data-tab="assertions">Assertions</button>
+                    <button type="button" class="btn btn-outline-secondary apiWorkspaceTabBtn" data-tab="automation">Automation</button>
+                  </div>
+                  <pre id="apiWorkspaceResponseContent" class="mt-3 whitespace-pre-wrap break-words rounded bg-slate-50 dark:!bg-slate-950 p-3 text-[11px] text-slate-700 dark:text-slate-200 max-h-[420px] overflow-auto">No response yet.</pre>
+                  <div id="apiWorkspaceAssertionResultsPanel" class="mt-3 d-none flex-column gap-2 max-h-[420px] overflow-auto"></div>
+                </div>
+              </div>
+              <div class="col-lg-5">
+                <div class="rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-900 p-3 mb-3 shadow-sm api-workspace-panel api-workspace-assert-panel">
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold shrink-0">Assertions</div>
+                    <textarea id="apiWorkspaceAssertionsInput" rows="2" placeholder="status=200||json.success=true"
+                      class="flex-1 min-h-[44px] p-2 border rounded-lg bg-slate-50 dark:!bg-slate-950 border-slate-400 dark:border-slate-700 text-sm text-slate-800 placeholder:text-slate-500 dark:text-slate-200 resize-none"></textarea>
+                    <button type="button" class="btn btn-primary btn-sm" id="apiWorkspaceRunAssertionsBtn">Run Assertions</button>
+                  </div>
+                  <div id="apiWorkspaceAssertionSummary" class="mt-2 text-xs text-slate-500 dark:text-slate-400">Results appear under the Assertions tab after you run them.</div>
+                </div>
+                <div class="rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-900 p-3 shadow-sm api-workspace-panel api-workspace-capture-panel">
+                  <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                    <div>
+                      <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">Captured Requests</div>
+                      <div id="apiWorkspaceCaptureStatus" class="mt-1 text-sm text-slate-600 dark:text-slate-400">Capture inactive</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <label for="apiWorkspaceCaptureTypeFilter" class="text-xs uppercase tracking-[0.2em] text-slate-500 font-semibold mb-0">Type</label>
+                      <select id="apiWorkspaceCaptureTypeFilter"
+                        class="appearance-none forced-colors:appearance-auto border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200 px-2 h-9 min-w-[140px]">
+                        <option value="xhr_fetch" selected>XHR/Fetch</option>
+                        <option value="all">All</option>
+                        <option value="xhr">XHR</option>
+                        <option value="fetch">Fetch</option>
+                        <option value="document">Document</option>
+                        <option value="script">Script</option>
+                        <option value="stylesheet">Stylesheet</option>
+                        <option value="image">Image</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="apiWorkspaceCaptureList"
+                    class="mt-3 max-h-[420px] overflow-auto rounded border border-slate-200 dark:!border-slate-700 bg-slate-50 dark:!bg-slate-950 p-2 text-xs text-slate-700 dark:text-slate-200">
+                    <div class="text-slate-400">No captured requests yet.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="advancedSpyWorkspace" class="hidden my-2">
+          <div class="rounded-4 border border-slate-400 dark:!border-slate-800 bg-slate-200 dark:!bg-slate-900 p-3 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+              <div>
+                <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">Advanced Spy</div>
+                <h2 class="mb-0 text-2xl font-semibold text-slate-900 dark:text-slate-100">Traversal-Aware Inspector</h2>
+              </div>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="closeAdvancedSpyWorkspaceBtn">Back to Runner</button>
+            </div>
+
+            <div class="mt-3 rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-950 p-3 shadow-sm">
+              <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                <div>
+                  <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">Mode</div>
+                  <div id="advancedSpyStatusText" class="mt-1 text-sm text-slate-700 dark:text-slate-300">Advanced Spy shell ready. Engine wiring will come in the next phase.</div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="advancedSpyLaunchBrowserBtn">Launch Browser</button>
+                  <button type="button" class="btn btn-primary btn-sm" id="advancedSpyStartBtn">Start Advanced Spy</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="advancedSpyFetchBtn">Fetch Latest</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" id="advancedSpyStopBtn">Stop</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3 row g-3">
+              <div class="col-lg-7">
+                <div class="rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-900 p-3 h-100 shadow-sm">
+                  <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                    <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">Selector Outputs</div>
+                    <div class="d-flex gap-2">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" id="advancedSpyUseInRunnerBtn">Use in Runner</button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm" id="advancedSpyCopyBtn">Copy Locator</button>
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Selector Results</label>
+                    <div
+                      id="advancedSpySelectorList"
+                      class="min-h-[260px] p-3 border rounded-xl bg-slate-50 dark:!bg-slate-950 border-slate-300 dark:border-slate-700">
+                      <div class="text-slate-400 text-sm">No Advanced Spy capture yet.</div>
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Iframe Detected</label>
+                    <div
+                      id="advancedSpyIframeChain"
+                      class="min-h-[140px] p-3 border rounded-xl bg-slate-50 dark:!bg-slate-950 border-slate-300 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">
+                      <div class="text-slate-400">No iframe traversal required.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-lg-5">
+                <div class="rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-900 p-3 h-100 shadow-sm">
+                  <div class="text-xs uppercase tracking-[0.24em] text-slate-500 font-semibold">Traversal Details</div>
+
+                  <div class="mt-3">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Context</label>
+                    <div
+                      id="advancedSpyContextSummary"
+                      class="min-h-[44px] p-3 border rounded-xl bg-slate-50 dark:!bg-slate-950 border-slate-300 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">
+                      <div class="text-slate-400">Context details appear after capture.</div>
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Shadow Root Path</label>
+                    <div
+                      id="advancedSpyShadowPath"
+                      class="min-h-[120px] p-3 border rounded-xl bg-slate-50 dark:!bg-slate-950 border-slate-300 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">
+                      <div class="text-slate-400">No shadow root traversal required.</div>
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Element Details</label>
+                    <textarea
+                      id="advancedSpyElementDetails"
+                      rows="7"
+                      placeholder="Tag, mode, text, and traversal details appear here"
+                      class="w-full p-3 border rounded-xl bg-slate-50 dark:!bg-slate-950 border-slate-300 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-500"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+   <div class="accordion accordion-flush shadow-sm border border-slate-300 dark:!border-slate-800 rounded-4 overflow-hidden" id="textActions">
+        <div id="runnerWorkspace" class="rounded-[28px] border border-slate-400 dark:!border-slate-800 bg-slate-300 dark:!bg-slate-950 p-3 shadow-sm">
+        <div class="accordion accordion-flush shadow-sm border border-slate-300 dark:!border-slate-800 rounded-4 overflow-hidden" id="textActions">
+          <div class="accordion-item  dark:!border-slate-800">
+            <h2 class="accordion-header ">
+              <button
+                class="accordion-button !bg-white dark:!bg-slate-900 !text-slate-900 focus:shadow-none dark:!text-slate-200 font-bold collapsed border-b border-slate-200 dark:!border-slate-800"
+                type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true"
+                aria-controls="collapseOne">
+                Test Actions
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse  visible" data-bs-parent="#textActions">
+              <div class="accordion-body p-3 bg-slate-300 dark:!bg-slate-950 dark:!text-slate-200">
+                <div class="row">
+                  <div class="col-12">
+                    <div class="rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-900 p-3 shadow-sm">
+                      <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                        <div>
+                          <div class="text-[11px] uppercase tracking-[0.24em] text-slate-500 font-semibold">Spy Objects</div>
+                          <h2 class="mt-1 mb-0 text-2xl font-semibold text-slate-900 dark:text-slate-100">Command Composer</h2>
+                          <div class="mt-1 text-sm text-slate-700 dark:text-slate-300">Run any manual keyword without the API-specific clutter.</div>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm px-4 py-2 fw-semibold rounded-pill" id="testLaunchBrowser">Launch Browser</button>
+                      </div>
+                      <div class="row mt-3 g-3">
+                        <div class="col-12">
+                          <input type="text" id="testLocator" placeholder="locator"
+                            class="w-full h-full px-3 py-3 border rounded-xl bg-slate-50 dark:!bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500">
+                        </div>
+                        <div class="col-12">
+                          <select
+                            class="appearance-none forced-colors:appearance-auto border rounded-xl bg-slate-50 dark:!bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-3 w-full h-[50px]"
+                            id="testKeyword">
+                            <option>Select Keyword</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="row mt-3 g-3">
+                        <div class="col-12">
+                          <textarea type="text" id="testValue" placeholder="value"
+                            class="w-full p-3 border rounded-xl bg-slate-50 dark:!bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 min-h-[130px]"></textarea>
+                        </div>
+                        <div class="col-auto">
+                          <button class="btn btn-outline-dark btn-sm px-4 py-2 dark:!bg-slate-900 dark:border-slate-700 dark:text-slate-100"
+                            id="testExecute">Execute</button>
+                        </div>
+                      </div>
+                      <div class="row mt-3">
+                        <div class="col">
+                          <label class="text-sm font-semibold text-slate-900 dark:text-slate-100">Output</label>
+                          <textarea
+                            class="mt-2 w-full p-3 border rounded-xl bg-slate-50 dark:!bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 min-h-[80px]"
+                            id="testOutput"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                  <div class="row mt-3 d-none hidden">
+                    <div class="col">
+                      <div class="rounded-4 border border-slate-300 dark:!border-slate-800 bg-white dark:!bg-slate-900 p-3 shadow-sm">
+                        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                          <div>
+                            <div class="fw-semibold text-slate-800 dark:text-slate-100">Network Capture</div>
+                            <div id="networkCaptureStatus" class="text-xs text-slate-500 dark:text-slate-400">Capture inactive</div>
+                          </div>
+                          <div class="d-flex gap-2 flex-wrap">
+                            <button
+                              class="btn btn-outline-secondary btn-sm"
+                              id="toggleNetworkCaptureBtn">Collapse</button>
+                            <button
+                              class="btn btn-outline-success btn-sm"
+                              id="startNetworkCaptureBtn">Start Capture</button>
+                            <button
+                              class="btn btn-outline-secondary btn-sm"
+                              id="refreshNetworkCaptureBtn">Refresh</button>
+                            <button
+                              class="btn btn-outline-danger btn-sm"
+                              id="stopNetworkCaptureBtn">Stop Capture</button>
+                          </div>
+                        </div>
+                        <div id="networkCaptureBody">
+                          <div
+                            id="networkCaptureList"
+                            class="max-h-[260px] overflow-auto rounded-xl border border-slate-200 dark:!border-slate-700 bg-slate-50 dark:!bg-slate-950 p-2 text-xs text-slate-700 dark:text-slate-200">
+                            <div class="text-slate-400">No captured requests yet.</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+        </div>
+
+        <div class="mt-3 rounded-4 border border-slate-400 dark:!border-slate-800 bg-white dark:!bg-slate-900 table-responsive flex flex-col shadow-sm" id="runnerLogSection">
+          <div id="emailSandboxStatusPanel" class="mx-3 mt-3 mb-1 rounded border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-slate-700 dark:border-slate-700 dark:!bg-slate-950 dark:text-slate-300 hidden">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <span class="uppercase tracking-[0.18em] text-slate-500">Email Sandbox</span>
+              <span id="emailSandboxStatusBadge" class="badge bg-secondary">Idle</span>
+            </div>
+            <div id="emailSandboxStatusText" class="mt-1">No sandbox email helper activity yet.</div>
+          </div>
+          <div class="relative overflow-x-auto overflow-y-auto flex-auto log-table-scroll [&::-webkit-scrollbar]:w-1
+          [&::-webkit-scrollbar-track]:bg-gray-100
+          [&::-webkit-scrollbar-thumb]:bg-gray-300
+          dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+          dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+            <table id="myTable" class="table-fixed w-full">
+              <thead class="!bg-slate-200 border-b border-slate-300 dark:!border-slate-800 shadow-md dark:!bg-slate-950 dark:text-slate-200 log-sticky-thead">
+                <tr>
+                  <th cope="col" class="px-6 py-3">Description</th>
+                  <th cope="col" class="px-6 py-3">keyword</th>
+                  <th cope="col" class="px-6 py-3">value</th>
+                  <th cope="col" class="px-6 py-3">xpath</th>
+                  <th cope="col" class="px-6 py-3 d-flex align-items-center justify-content-end gap-3">
+                    <span id="stepProgress" class="badge bg-secondary fw-normal text-uppercase text-xs"></span>
+                    <button id="clearLogBtn" class="btn btn-outline-secondary btn-sm">Clear Log</button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        </div>
+
+        <div class="modal fade" id="apiWorkspaceReportModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content dark:bg-slate-900">
+              <div class="modal-header">
+                <h5 class="modal-title">API Call Full Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div id="apiWorkspaceReportMeta" class="text-sm text-slate-500 dark:text-slate-400 mb-3">No response available.</div>
+                <div class="row g-3">
+                  <div class="col-lg-4">
+                    <div class="rounded border border-slate-200 dark:!border-slate-700 p-3">
+                      <div class="text-[11px] uppercase tracking-wide text-slate-400">Execution</div>
+                      <div id="apiWorkspaceReportExecution" class="mt-2 text-sm text-slate-700 dark:text-slate-200">No execution summary.</div>
+                    </div>
+                  </div>
+                  <div class="col-lg-8">
+                    <div class="rounded border border-slate-200 dark:!border-slate-700 p-3">
+                      <div class="text-[11px] uppercase tracking-wide text-slate-400">Assertions</div>
+                      <div id="apiWorkspaceReportAssertions" class="mt-2 text-sm text-slate-700 dark:text-slate-200">No assertions evaluated.</div>
+                    </div>
+                  </div>
+                </div>
+                <pre id="apiWorkspaceReportContent" class="mt-3 whitespace-pre-wrap break-words rounded bg-slate-50 dark:!bg-slate-950 p-3 text-[11px] text-slate-700 dark:text-slate-200 max-h-[420px] overflow-auto">No response yet.</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="apiWorkspaceCaptureEditModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content dark:bg-slate-900">
+              <div class="modal-header">
+                <h5 class="modal-title">Captured Request - View / Edit Payload</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row g-2">
+                  <div class="col-md-2">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Method</label>
+                    <select id="apiWorkspaceCaptureEditMethod"
+                      class="appearance-none forced-colors:appearance-auto border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-base text-slate-800 dark:text-slate-200 px-3 w-full h-10">
+                      <option>GET</option>
+                      <option>POST</option>
+                      <option>PUT</option>
+                      <option>PATCH</option>
+                      <option>DELETE</option>
+                    </select>
+                  </div>
+                  <div class="col-md-8">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">URL</label>
+                    <input type="text" id="apiWorkspaceCaptureEditUrl"
+                      class="w-full h-10 px-3 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200"
+                      placeholder="https://api.example.com/endpoint">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Mode</label>
+                    <select id="apiWorkspaceCaptureEditMode"
+                      class="appearance-none forced-colors:appearance-auto border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-base text-slate-800 dark:text-slate-200 px-3 w-full h-10">
+                      <option>auto</option>
+                      <option>browser_session</option>
+                      <option>session_http</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="row g-2 mt-1">
+                  <div class="col-md-4">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Query JSON</label>
+                    <textarea id="apiWorkspaceCaptureEditQuery" rows="7"
+                      class="w-full p-2 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">{}</textarea>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Body JSON / text</label>
+                    <textarea id="apiWorkspaceCaptureEditBody" rows="7"
+                      class="w-full p-2 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">{}</textarea>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Headers JSON</label>
+                    <textarea id="apiWorkspaceCaptureEditHeaders" rows="7"
+                      class="w-full p-2 border rounded-lg bg-white dark:!bg-slate-900 border-slate-400 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">{"Accept":"application/json"}</textarea>
+                  </div>
+                </div>
+                <div id="apiWorkspaceCaptureEditStatus" class="mt-2 text-sm text-slate-600 dark:text-slate-400">Edit request payload, then replay or save.</div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="apiWorkspaceCaptureEditOpenAdvancedBtn">Open in Advanced</button>
+                <button type="button" class="btn btn-outline-primary" id="apiWorkspaceCaptureEditSaveBtn">Save as API Step</button>
+                <button type="button" class="btn btn-primary" id="apiWorkspaceCaptureEditReplayBtn">Replay Now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="reExecuteDataModal" tabindex="-1" role="dialog" aria-labelledby="reExecuteDataModalTitle"
+          aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content dark:bg-slate-900">
+              <div class="modal-header">
+                <h5 class="modal-title" id="reExecuteDataModalTitle">Step Failed - Update & Re-run</h5>
+              </div>
+              <div class="modal-body space-y-3">
+                <div class="p-2 rounded bg-slate-50 dark:bg-slate-800 text-sm">
+                  <div class="mb-1"><span class="fw-bold">Test Step:</span> <span id="reExecStepLabel"></span></div>
+                  <div class="mb-1"><span class="fw-bold">Existing Locator:</span> <span id="reExecLocatorLabel"></span></div>
+                  <div><span class="fw-bold">Step Data:</span> <span id="reExecDataLabel"></span></div>
+                </div>
+                <div class="row g-2">
+                  <div class="col-12 d-flex flex-column gap-1">
+                    <label for="reExecuteModalXpath" class="form-label text-sm mb-0">New / Updated Locator</label>
+                    <input type="text" id="reExecuteModalXpath" class="form-control dark:bg-transparent dark:!text-slate-200 dark:placeholder-slate-500 dark:focus:ring-0 dark:focus:bg-transparent" placeholder="Enter locator / xpath">
+                  </div>
+                  <div class="col-12 d-flex align-items-center gap-2">
+                    <label for="reExecuteModalKeyword" class="form-label text-sm mb-0">Keyword</label>
+                    <select id="reExecuteModalKeyword" class="form-select flex-grow-1 dark:bg-transparent dark:!text-slate-200 dark:border-slate-700">
+                      <option value="">Select keyword</option>
+                    </select>
+                  </div>
+                  <div class="col-12 d-flex flex-column gap-1">
+                    <label for="reExecuteModalValue" class="form-label text-sm mb-0">Step Test Data</label>
+                    <textarea id="reExecuteModalValue" rows="3" class="form-control dark:bg-transparent dark:!text-slate-200 dark:placeholder-slate-500 dark:focus:ring-0 dark:focus:bg-transparent" placeholder="Enter data/value"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer justify-content-between">
+                <div class="d-flex gap-2">
+                  <button type="button" id="reExecuteModalResetBtn" class="btn btn-outline-secondary">Reset</button>
+                  <button type="button" id="reExecuteModalMarkFailBtn" class="btn btn-outline-danger">Mark as Fail</button>
+                  <button type="button" id="reExecuteModalMarkPassBtn" class="btn btn-outline-success">Mark as Pass</button>
+                </div>
+                <div class="d-flex gap-2">
+                  <button type="button" id="reExecuteModalCancelBtn" class="btn btn-outline-secondary">Close</button>
+                  <button type="button" id="reExecuteModalExecuteBtn" class="btn btn-primary dark:!bg-slate-700 dark:border-slate-700">Re-Execute Step</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="videoWrapper"
+          class="fixed z-10 bottom-3 left-2 w-[230px]  transition-all ease-in-out shadow-slate-50 outline outline-2 outline-slate-200 rounded-lg overflow-hidden ">
+          <div id="videoModal" class="relative rounded-md overflow-hidden bg-black   w-full h-3/6">
+            <video class="w-100 object-fit-cover h-full" playsinline>
+
+            </video>
+            <span id="videoResizeBtn"
+              class="text-slate-400 absolute right-2 rounded-full cursor-pointer bottom-2 p-3 bg-white text-2xl flex items-center justify-center w-12 h-12 font-bold z-10"><i
+                class="bi bi-aspect-ratio"></i></i></button>
+          </div>
+        </div>
+
+        <div class="modal fade" id="deviceSetupModal" tabindex="-1" aria-labelledby="deviceSetupModalLabel"
+          aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content dark:bg-slate-900">
+              <div class="modal-header border-b dark:!border-slate-800">
+                <div class="d-flex flex-column">
+                  <h5 class="modal-title" id="deviceSetupModalLabel">Setup Device</h5>
+                  <small id="queueWorkerState" class="text-muted">Worker status unknown</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="rounded border border-indigo-200 bg-indigo-50 p-3 mb-3">
+                  <div class="row g-2 align-items-end">
+                    <div class="col-md-6">
+                      <label class="form-label small text-muted" for="queueWorkerPairingCode">Pairing Code</label>
+                      <input id="queueWorkerPairingCode" class="form-control" placeholder="paste one-time pairing code" />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small text-muted" for="queueWorkerClaimToken">Claim Token (optional)</label>
+                      <input id="queueWorkerClaimToken" class="form-control" placeholder="paste claim token if provided" />
+                    </div>
+                    <div class="col-md-2">
+                      <button id="pairDeviceSetupBtn" type="button" class="btn btn-outline-primary w-100">Pair Device</button>
+                    </div>
+                  </div>
+                  <small id="queueWorkerPairingMessage" class="text-muted d-block mt-2">Use the pairing code to connect this runner. Add the claim token only if one was provided.</small>
+                </div>
+                <div class="text-[11px] uppercase tracking-wide text-slate-400 mb-2">Advanced Manual Setup</div>
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label class="form-label small text-muted" for="queueWorkerEnabled">Queue Worker</label>
+                    <select id="queueWorkerEnabled" class="form-control">
+                      <option value="true">Enabled</option>
+                      <option value="false">Disabled</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small text-muted" for="queueWorkerDeviceId">Device ID</label>
+                    <input id="queueWorkerDeviceId" class="form-control" placeholder="e.g. 12" />
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small text-muted" for="queueWorkerRunnerId">Runner ID</label>
+                    <input id="queueWorkerRunnerId" class="form-control" placeholder="auto-generated" />
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small text-muted" for="queueWorkerPollMs">Poll ms</label>
+                    <input id="queueWorkerPollMs" class="form-control" type="number" min="1000" step="500" placeholder="3000" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small text-muted" for="queueWorkerApiBaseUrl">Backend API Base URL</label>
+                    <input id="queueWorkerApiBaseUrl" class="form-control" placeholder="http://localhost/.../api" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small text-muted" for="queueWorkerToken">Device Key</label>
+                    <input id="queueWorkerToken" class="form-control" placeholder="paste device key once" />
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer border-t dark:!border-slate-800 d-flex justify-content-between align-items-center">
+                <small id="queueWorkerMessage" class="text-muted me-auto">Bind this runner VM to a device and save its device key once.</small>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="saveQueueWorkerConfigBtn" type="button" class="btn btn-primary">Save Device Setup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer app-watermark text-center bg-transparent card flex-row justify-content-center w-100 ">
+        All Rights Reserved © <span id="year"></span>&nbsp;QAFastTrack
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+    crossorigin="anonymous"></script>
+  <script src="modules/apiWorkspace.js" defer></script>
+  <script src="modules/spyWorkspace.js" defer></script>
+  <script src="modules/workspaceMode.js" defer></script>
+  <script src="modules/networkCapture.js" defer></script>
+  <script src="modules/manualRunner.js" defer></script>
+  <script src="modules/advancedSpyShell.js" defer></script>
+  <script src="modules/advancedSpyWorkspace.js" defer></script>
+  <script src="modules/browserSessionController.js" defer></script>
+  <script src="modules/reExecuteFlow.js" defer></script>
+  <script src="modules/serverDeviceControls.js" defer></script>
+  <script src="modules/queueWorkerSetup.js" defer></script>
+  <script src="home.js" defer></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+  <script>
+
+    $(document).ready(function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+      function checkWindowSize() {
+        const windowWidth = $(window).width();
+        const isSmallScreen = windowWidth < 768;
+        $('#mainContent, #sidebar').toggleClass('collapsed', isSmallScreen);
+      }
+
+      // Check size on page load
+      checkWindowSize();
+
+      // Check size on window resize
+      $(window).resize(function () {
+        checkWindowSize();
+      });
+      $("#year").text(new Date().getFullYear());
+      $('#closeSidebarBtn').on('click', function () {
+        $('#sidebar').addClass('collapsed');
+        $('#mainContent').addClass('collapsed');
+      });
+
+      $('#openSidebarBtn').on('click', function () {
+        $('#sidebar').toggleClass('collapsed');
+        $('#mainContent').toggleClass('collapsed');
+      });
+      let isCentered = false;
+
+      // Resize toggle
+      $('#videoResizeBtn').on('click', function () {
+        if (isCentered) {
+          // Move to bottom-left and make small
+          $('#videoWrapper').removeClass('h-full w-full flex bg-slate-100/20 items-center justify-center h-dvh inset-0').addClass('bottom-3 left-2 w-[230px]');
+          $('#videoModal').removeClass('w-1/2 h-3/6').addClass('w-full h-3/6');
+        } else {
+          // Move to center and make large
+          $('#videoWrapper').removeClass('bottom-3 left-2 w-[230px]').addClass('h-full w-full flex bg-slate-100/20 items-center justify-center h-dvh inset-0');
+          $('#videoModal').removeClass('w-full h-3/6').addClass('w-1/2 h-3/6');
+        }
+        isCentered = !isCentered;
+        $('#videoModal video').attr('controls', isCentered);
+      });
+
+    });
+  </script>
+</body>
+
+</html>
+
+
+
+
+

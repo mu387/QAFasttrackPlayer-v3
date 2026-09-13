@@ -1,0 +1,659 @@
+{
+  "generated_at": "2026-03-19T03:06:04.558Z",
+  "fixture_path": "C:\\repos\\qa-fast-track-electron_v2\\scripts\\fixtures\\xpath_parity_targets.json",
+  "base_url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+  "totals": {
+    "cases": 13,
+    "passed_capture": 13,
+    "failed_capture": 0,
+    "compared_with_reference": 13,
+    "primary_exact_matches": 13
+  },
+  "results": [
+    {
+      "index": 1,
+      "name": "TextBox Full Name",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='fullName']",
+          "//input[@id='fullName']",
+          "//*[@name='fullName']",
+          "//input[@name='fullName']",
+          "//*[@placeholder='Full Name']",
+          "//input[@placeholder='Full Name']",
+          "//*[@type='text' and @name='fullName']",
+          "//input[@type='text' and @name='fullName']",
+          "/html[1]/body[1]/div[1]/form[1]/div[1]/div[1]/input[1]",
+          "//*[contains(concat(' ', normalize-space(@class), ' '), ' form-control ')]"
+        ],
+        "locator": "//*[@id='fullName']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889569397,
+        "captureAgeMs": 26
+      },
+      "reference": {
+        "primary": "//*[@id='fullName']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 2,
+      "name": "TextBox Contact Pref SMS",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='prefSms']",
+          "//input[@id='prefSms']",
+          "//*[@value='SMS']",
+          "//input[@value='SMS']",
+          "/html[1]/body[1]/div[1]/form[1]/div[7]/div[1]/div[2]/input[1]",
+          "//*[@name='contactPref']",
+          "//input[@name='contactPref']",
+          "//*[@type='checkbox' and @name='contactPref']",
+          "//input[@type='checkbox' and @name='contactPref']",
+          "//*[contains(concat(' ', normalize-space(@class), ' '), ' form-check-input ')]"
+        ],
+        "locator": "//*[@id='prefSms']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889570579,
+        "captureAgeMs": 25
+      },
+      "reference": {
+        "primary": "//*[@id='prefSms']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 3,
+      "name": "TextBox Email",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='email']",
+          "//input[@id='email']",
+          "//*[@name='email']",
+          "//input[@name='email']",
+          "//*[@placeholder='name@example.com']",
+          "//input[@placeholder='name@example.com']",
+          "//*[@type='email' and @name='email']",
+          "//input[@type='email' and @name='email']",
+          "/html[1]/body[1]/div[1]/form[1]/div[2]/div[1]/input[1]",
+          "//*[contains(concat(' ', normalize-space(@class), ' '), ' form-control ')]"
+        ],
+        "locator": "//*[@id='email']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889571709,
+        "captureAgeMs": 26
+      },
+      "reference": {
+        "primary": "//*[@id='email']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 4,
+      "name": "WebTables Add Button",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='addUserBtn']",
+          "//button[@id='addUserBtn']",
+          "//*[normalize-space(.)='Add']",
+          "//button[normalize-space(.)='Add']",
+          "//button[contains(normalize-space(.),'Add')]",
+          "/html[1]/body[1]/section[1]/div[1]/button[1]",
+          "//*[contains(concat(' ', normalize-space(@class), ' '), ' btn ')]",
+          "//button[contains(concat(' ', normalize-space(@class), ' '), ' btn ')]",
+          "//*[contains(normalize-space(.),'Add')]",
+          "#addUserBtn"
+        ],
+        "locator": "//*[@id='addUserBtn']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889572876,
+        "captureAgeMs": 26
+      },
+      "reference": {
+        "primary": "//*[@id='addUserBtn']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 5,
+      "name": "WebTables Search Input",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='searchInput']",
+          "//input[@id='searchInput']",
+          "//*[@placeholder='Type to search']",
+          "//input[@placeholder='Type to search']",
+          "/html[1]/body[1]/section[1]/div[1]/div[1]/input[1]",
+          "#searchInput"
+        ],
+        "locator": "//*[@id='searchInput']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889574008,
+        "captureAgeMs": 25
+      },
+      "reference": {
+        "primary": "//*[@id='searchInput']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 6,
+      "name": "PracticeForm First Name",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='firstName']",
+          "//input[@id='firstName']",
+          "//*[@name='firstName']",
+          "//input[@name='firstName']",
+          "//*[@type='text' and @name='firstName']",
+          "//input[@type='text' and @name='firstName']",
+          "/html[1]/body[1]/div[1]/form[1]/div[1]/div[2]/div[1]/input[1]",
+          "//*[@id='qaPracticeForm']//input[1]",
+          "#firstName"
+        ],
+        "locator": "//*[@id='firstName']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889575292,
+        "captureAgeMs": 24
+      },
+      "reference": {
+        "primary": "//*[@id='firstName']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 7,
+      "name": "PracticeForm Reset Button",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='resetButton']",
+          "//button[@id='resetButton']",
+          "//*[contains(concat(' ', normalize-space(@class), ' '), ' btn-secondary ')]",
+          "//button[contains(concat(' ', normalize-space(@class), ' '), ' btn-secondary ')]",
+          "//*[normalize-space(.)='Reset Form']",
+          "//button[normalize-space(.)='Reset Form']",
+          "//button[contains(normalize-space(.),'Reset Form')]",
+          "/html[1]/body[1]/div[1]/form[1]/div[6]/button[1]",
+          "//*[contains(normalize-space(.),'Reset Form')]",
+          "//*[@id='qaPracticeForm']//button[1]"
+        ],
+        "locator": "//*[@id='resetButton']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889576444,
+        "captureAgeMs": 26
+      },
+      "reference": {
+        "primary": "//*[@id='resetButton']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 8,
+      "name": "Select Menu Old Style Select",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='oldStyleSelect']",
+          "//select[@id='oldStyleSelect']",
+          "//*[contains(concat(' ', normalize-space(@class), ' '), ' native-select ')]",
+          "//select[contains(concat(' ', normalize-space(@class), ' '), ' native-select ')]",
+          "//select[contains(normalize-space(.),'Red Blue Green Yellow Purple Black White Violet Indigo Magenta Aqua')]",
+          "/html[1]/body[1]/div[1]/div[1]/div[3]/select[1]",
+          "//*[contains(normalize-space(.),'Red Blue Green Yellow Purple Black White Violet Indigo Magenta Aqua')]",
+          "#oldStyleSelect"
+        ],
+        "locator": "//*[@id='oldStyleSelect']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889577609,
+        "captureAgeMs": 24
+      },
+      "reference": {
+        "primary": "//*[@id='oldStyleSelect']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 9,
+      "name": "Select Menu Option Opel",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[normalize-space(.)='Opel']",
+          "//option[normalize-space(.)='Opel']",
+          "//option[contains(normalize-space(.),'Opel')]",
+          "//*[@id='standardMulti']//option[3]",
+          "/html[1]/body[1]/div[1]/div[1]/div[7]/select[1]/option[3]",
+          "//*[contains(normalize-space(.),'Opel')]",
+          "div.page > div.widget-card > div.field-block > select.native-multi > option"
+        ],
+        "locator": "//*[normalize-space(.)='Opel']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889578740,
+        "captureAgeMs": 28
+      },
+      "reference": {
+        "primary": "//*[normalize-space(.)='Opel']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 10,
+      "name": "Alerts Primary Alert Button",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='alertButton']",
+          "//button[@id='alertButton']",
+          "/html[1]/body[1]/div[1]/div[2]/div[1]/button[1]",
+          "//*[contains(concat(' ', normalize-space(@class), ' '), ' btn-primary ')]",
+          "//button[contains(concat(' ', normalize-space(@class), ' '), ' btn-primary ')]",
+          "//*[normalize-space(.)='Click me']",
+          "//button[normalize-space(.)='Click me']",
+          "//*[contains(normalize-space(.),'Click me')]",
+          "//button[contains(normalize-space(.),'Click me')]",
+          "#alertButton"
+        ],
+        "locator": "//*[@id='alertButton']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889579883,
+        "captureAgeMs": 27
+      },
+      "reference": {
+        "primary": "//*[@id='alertButton']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 11,
+      "name": "Alerts Confirm Button",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@id='confirmButton']",
+          "//button[@id='confirmButton']",
+          "/html[1]/body[1]/div[1]/div[2]/div[3]/button[1]",
+          "//*[contains(concat(' ', normalize-space(@class), ' '), ' btn-primary ')]",
+          "//button[contains(concat(' ', normalize-space(@class), ' '), ' btn-primary ')]",
+          "//*[normalize-space(.)='Click me']",
+          "//button[normalize-space(.)='Click me']",
+          "//*[contains(normalize-space(.),'Click me')]",
+          "//button[contains(normalize-space(.),'Click me')]",
+          "#confirmButton"
+        ],
+        "locator": "//*[@id='confirmButton']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889581007,
+        "captureAgeMs": 24
+      },
+      "reference": {
+        "primary": "//*[@id='confirmButton']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 12,
+      "name": "Advanced Iframe Lab Outside Name",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@data-testid='iframe-outside-name']",
+          "//input[@data-testid='iframe-outside-name']",
+          "//*[@placeholder='Workspace approvals']",
+          "//input[@placeholder='Workspace approvals']",
+          "/html[1]/body[1]/div[1]/div[2]/section[1]/div[2]/label[1]/input[1]",
+          "div.advdom-grid.advdom-grid-practice > section.advdom-card.advdom-card-panel > div.advdom-form-grid > label.advdom-field > input"
+        ],
+        "locator": "//*[@data-testid='iframe-outside-name']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889582338,
+        "captureAgeMs": 26
+      },
+      "reference": {
+        "primary": "//*[@data-testid='iframe-outside-name']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    },
+    {
+      "index": 13,
+      "name": "Advanced Native Shadow Outside Email",
+      "status": "captured",
+      "captured": {
+        "paths": [
+          "//*[@data-testid='native-outside-email']",
+          "//input[@data-testid='native-outside-email']",
+          "//*[@placeholder='release.owner@practice.local']",
+          "//input[@placeholder='release.owner@practice.local']",
+          "/html[1]/body[1]/div[1]/div[2]/section[1]/div[2]/label[2]/input[1]",
+          "div.advdom-grid.advdom-grid-practice > section.advdom-card.advdom-card-panel > div.advdom-form-grid > label.advdom-field > input"
+        ],
+        "locator": "//*[@data-testid='native-outside-email']",
+        "value": "//*[@id='contentFrame']",
+        "locatorKind": "xpath",
+        "iframeChain": [
+          {
+            "kind": "xpath",
+            "label": "Iframe 1",
+            "selector": "//*[@id='contentFrame']"
+          }
+        ],
+        "shadowChain": [],
+        "tip": "Element is inside an iframe",
+        "source": "click",
+        "capturedAt": 1773889583503,
+        "captureAgeMs": 22
+      },
+      "reference": {
+        "primary": "//*[@data-testid='native-outside-email']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      },
+      "comparison": {
+        "primaryExact": true,
+        "primaryInRefSet": true,
+        "fallbackOverlapCount": 1,
+        "fallbackOverlapRatio": 1,
+        "valueExact": true
+      },
+      "uniqueness": {
+        "unique": true,
+        "count": 1
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,251 @@
+{
+  "cases": [
+    {
+      "name": "TextBox Full Name",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/elements/textbox.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='fullName']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='fullName']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "TextBox Contact Pref SMS",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/elements/textbox.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='prefSms']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='prefSms']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "TextBox Email",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/elements/textbox.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='email']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='email']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "WebTables Add Button",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/elements/webtables.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='addUserBtn']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='addUserBtn']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "WebTables Search Input",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/elements/webtables.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='searchInput']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='searchInput']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "PracticeForm First Name",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/forms/practiceform.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='firstName']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='firstName']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "PracticeForm Reset Button",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/forms/practiceform.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='resetButton']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='resetButton']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "Select Menu Old Style Select",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/widgets/select.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='oldStyleSelect']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='oldStyleSelect']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "Select Menu Option Opel",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/widgets/select.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='standardMulti']/option[normalize-space(.)='Opel']"
+      },
+      "selectorhub": {
+        "primary": "//*[normalize-space(.)='Opel']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "Alerts Primary Alert Button",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/alerts/alerts.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='alertButton']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='alertButton']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "Alerts Confirm Button",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/alerts/alerts.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@id='confirmButton']"
+      },
+      "selectorhub": {
+        "primary": "//*[@id='confirmButton']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "Advanced Iframe Lab Outside Name",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/advanced-dom/iframe-lab.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@data-testid='iframe-outside-name']"
+      },
+      "selectorhub": {
+        "primary": "//*[@data-testid='iframe-outside-name']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    },
+    {
+      "name": "Advanced Native Shadow Outside Email",
+      "url": "https://beta-ui.qafasttrack.com/qapractice/index.html",
+      "preSteps": [
+        { "action": "click", "by": "css", "value": "a[data-page='pages/advanced-dom/native-shadow.html']", "postWaitMs": 250 }
+      ],
+      "postStartSteps": [
+        { "action": "switchIframe", "value": "//*[@id='contentFrame']" }
+      ],
+      "target": {
+        "by": "xpath",
+        "value": "//*[@data-testid='native-outside-email']"
+      },
+      "selectorhub": {
+        "primary": "//*[@data-testid='native-outside-email']",
+        "fallbacks": [],
+        "value": "//*[@id='contentFrame']"
+      }
+    }
+  ]
+}

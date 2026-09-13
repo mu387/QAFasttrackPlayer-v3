@@ -1,0 +1,27 @@
+name: Electron CI (Lightweight)
+
+on:
+  push:
+    branches:
+      - develop
+      - testing
+      - main
+
+jobs:
+  validate:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run API regression tests
+        run: npm run test:api-regression

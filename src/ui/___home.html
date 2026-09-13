@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA Fast Track Automation</title>
+  <!-- Bootstrap 5 CSS -->
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="./style.css" rel="stylesheet">
+
+  <script src="home.js" defer></script>
+</head>
+
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="header pb-0">
+      <img src="./qafasttrackwhite.svg" width="90%" alt="logo" class="img-fluid mx-auto">
+
+    </div>
+    <hr />
+    <nav>
+      <span class="text-white-50 fs-6 px-3">Actions</span>
+      <ul>
+        <li class=" nav-link" id="startServer"><i class="bi bi-play-fill"></i> <span> Start Server</span></li>
+        <li class=" nav-link" id="startServer"><i class="bi bi-play-fill"></i> <span> Pause Execution</span></li>
+        <li class=" nav-link" id="captureXpath"><i class="bi bi-play-fill"></i> <span> Xpath Recorder</span></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+
+
+    <!-- Main Card -->
+    <div class="card main-card p-0">
+      <div class="card-header">
+        <!-- Main Header -->
+        <header class="">
+          <div class=" d-flex align-items-center gap-1">
+            <div class="d-flex flex-fill gap-2 align-items-center">
+              <button class="toggle-btn" id="openSidebarBtn">☰</button>
+            </div>
+            <h1 class="fs-4 m-0">Welcome to your QA Fast Track Local Utility.</h1>
+            <div class=" d-flex flex-fill justify-content-end align-items-center">
+
+              <i id="serverText" class="bi bi-reception-1 fs-4 text-danger d-block bg-da" data-bs-toggle="tooltip"
+                data-bs-placement="top" data-bs-custom-class="bg-danger" data-bs-title="Server Status Not Running"></i>
+            </div>
+          </div>
+
+
+        </header>
+      </div>
+      <div class="card-body">
+        <!-- Button trigger modal -->
+        <div class="d-flex justify-content-between">
+          <div class="d-flex align-items-center gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="" id="reExecute">
+              <label class="form-check-label" for="reExecute">
+                Re-Execute
+              </label>
+            </div>
+            <button type="button" class="btn btn-outline-secondary" id="reExecuteBtn">Re-Execute Step</button>
+          </div>
+          <select id="screenDropdown" class="form-control w-25" aria-label="Default select example">
+            <option selected>Select Screen</option>
+          </select>
+        </div>
+
+        <div class="card mt-3">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Runner Queue Settings</span>
+            <small id="queueWorkerState" class="text-muted">Worker status unknown</small>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label small text-muted" for="queueWorkerEnabled">Queue Worker</label>
+                <select id="queueWorkerEnabled" class="form-control">
+                  <option value="true">Enabled</option>
+                  <option value="false">Disabled</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted" for="queueWorkerDeviceId">Device ID</label>
+                <input id="queueWorkerDeviceId" class="form-control" placeholder="e.g. 12" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted" for="queueWorkerRunnerId">Runner ID</label>
+                <input id="queueWorkerRunnerId" class="form-control" placeholder="auto-generated" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted" for="queueWorkerPollMs">Poll ms</label>
+                <input id="queueWorkerPollMs" class="form-control" type="number" min="1000" step="500" placeholder="3000" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted" for="queueWorkerApiBaseUrl">Backend API Base URL</label>
+                <input id="queueWorkerApiBaseUrl" class="form-control" placeholder="http://localhost/.../api" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted" for="queueWorkerToken">Bearer Token</label>
+                <input id="queueWorkerToken" class="form-control" placeholder="paste client token" />
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <small id="queueWorkerMessage" class="text-muted">Bind this runner VM to a device before enabling strict device claiming.</small>
+              <button id="saveQueueWorkerConfigBtn" class="btn btn-primary">Save Runner Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+        <table id="myTable" class="table table-responsive table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Description</th>
+              <th scope="col">keyword</th>
+              <th scope="col">value</th>
+              <th scope="col">xpath</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+
+
+        <!-- Modal -->
+        <div class="modal fade" id="reExecuteDataModal" tabindex="-1" role="dialog"
+          aria-labelledby="reExecuteDataModalTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Step Failed - Edit Data</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col">
+                    <input type="text" id="reExecuteModalXpath" class="form-control" placeholder="Xpath">
+                  </div>
+                  <div class="col">
+                    <input type="text" class="form-control" placeholder="">
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" id="reExecuteModalSaveBtn" class="btn btn-primary" data-dismiss="modal">Save
+                  Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <video>
+
+        </video>
+      </div>
+      <div class="card-footer text-center bg-transparent card flex-row justify-content-center w-100 ">
+        All Rights Reserved © <span id="year"></span>&nbsp;QAFastTrack
+      </div>
+    </div>
+  </div>
+  <!-- Bootstrap Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+
+</body>
+
+</html>
