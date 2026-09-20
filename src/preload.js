@@ -54,6 +54,7 @@ contextBridge.exposeInMainWorld('express', {
   reExecuteStep: () => ipcRenderer.invoke('reExecuteStep'),
   isReExecute: checked => ipcRenderer.send('isReExecute', checked),
 
+  automationHelperWaiting: callback => ipcRenderer.on('automationHelperWaiting', callback),
   testRunnerStepData: callback =>
     ipcRenderer.on('testRunnerStepData', callback),
   openReExecuteDataModal: callback =>

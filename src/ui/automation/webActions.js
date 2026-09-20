@@ -1,3 +1,4 @@
+const visibleWait = require('../../utils/visibleWait');
 const { PDFDocument } = require('pdf-lib');
 const axios = require('axios');
 const fsSync = require('fs');
@@ -540,6 +541,7 @@ const resolveWaitForTextConfig = step => {
         text: '',
         scope: '',
         match: 'contains',
+        state: 'exist',
         timeout: 10000,
     };
 
@@ -557,6 +559,9 @@ const resolveWaitForTextConfig = step => {
             case 'target':
             case 'xpath':
                 config.scope = entry.value;
+                break;
+            case 'state':
+                config.state = entry.value.toLowerCase();
                 break;
             case 'match':
                 config.match = entry.value.toLowerCase();
@@ -2401,7 +2406,11 @@ class WebActions {
             throw new Error('waitForElement requires a state value.');
         }
 
-        await this.driver.wait(async () => {
+        if (['exist', 'notexist', 'visible', 'hidden'].includes(state)) {
+            return visibleWait.waitVisible(this.driver, config,
+                () => visibleWait.lookup(this.driver, this.currentContext, indexedInheritedTarget, path => this.findElementBy(path), true));
+        }
+        return visibleWait.withProgress('waitforelement', config, () => this.driver.wait(async () => {
             let elements = [];
             if (useInheritedParentLocator && indexedInheritedTarget !== target) {
                 try {
@@ -2415,7 +2424,7 @@ class WebActions {
                     elements = [];
                 }
             } else {
-                elements = await this.getLookupContext().findElements(this.findElementBy(target));
+                elements = await (this.currentContext || this.driver).findElements(this.findElementBy(target));
             }
 
             switch (state) {
@@ -2492,55 +2501,14 @@ class WebActions {
                 default:
                     throw new Error(`Unsupported waitForElement state: ${config.state}`);
             }
-        }, config.timeout, `waitForElement timed out waiting for ${state} on ${indexedInheritedTarget}`);
+        }, config.timeout, `waitForElement timed out waiting for ${state} on ${indexedInheritedTarget}`, 200));
     };
     async waitForText(step) {
         const config = resolveWaitForTextConfig(step);
-        const text = normalizeWhitespace(config.text);
-        const match = String(config.match || 'contains').trim().toLowerCase();
-
-        if (!text) {
-            throw new Error('waitForText requires a text value.');
-        }
-
-        if (match !== 'contains' && match !== 'exact') {
-            throw new Error(`Unsupported waitForText match: ${config.match}`);
-        }
-
-        await this.driver.wait(async () => {
-            const scopeElement = config.scope
-                ? await this.findElement(config.scope, step)
-                : this.currentContext && this.currentContext !== this.driver
-                    ? this.currentContext
-                    : null;
-            return await this.driver.executeScript(
-                `
-                    const root = arguments[0] || document.body;
-                    const expectedText = arguments[1];
-                    const matchMode = arguments[2];
-                    const normalize = value => String(value || '').replace(/\\s+/g, ' ').trim();
-                    const expected = normalize(expectedText);
-                    if (!expected) {
-                        return false;
-                    }
-
-                    const nodes = [root, ...Array.from(root.querySelectorAll('*'))];
-                    return nodes.some(node => {
-                        const textValue = normalize(node.innerText || node.textContent || '');
-                        if (!textValue) {
-                            return false;
-                        }
-
-                        return matchMode === 'exact'
-                            ? textValue === expected
-                            : textValue.includes(expected);
-                    });
-                `,
-                scopeElement,
-                text,
-                match,
-            );
-        }, config.timeout, `waitForText timed out waiting for text ${text}`);
+        if (!['exist', 'notexist'].includes(config.state)) throw new Error('Unsupported waitForText state: ' + config.state);
+        return visibleWait.waitVisible(this.driver, config,
+            () => visibleWait.lookup(this.driver, this.currentContext, config.scope, path => this.findElementBy(path), true).then(elements => elements.slice(0, 1)),
+            () => this.driver.executeScript('return window.__qaCurrentShadowRoot || arguments[0] || document.body;', this.currentContext === this.driver ? null : this.currentContext));
     };
     async existold(step) {
         return await this.findElement(step.xPath, step);

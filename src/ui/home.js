@@ -1949,3 +1949,68 @@ apiWorkspaceRunAssertionsBtn?.addEventListener('click', () => {
 
 
 
+
+// Action feedback is presentation-only; helper outcomes never set test-step status.
+let activeHelperWaitId = null;
+let activeStripAction = null;
+let helperFailureCount = 0;
+let latestHelperFailure = '';
+express.automationHelperWaiting((_event, payload) => {
+  const strip = document.getElementById('automationWaitStrip');
+  const label = document.getElementById('automationWaitText');
+  const failure = document.getElementById('automationHelperFailure');
+  if (!strip || !label || !failure) return;
+  const phaseLabel = phase => phase === 'before' ? 'Before helper' : phase === 'after' ? 'After helper' : 'Main action';
+  const actionLabel = action => 'Step ' + action.stepNumber + ' | ' + phaseLabel(action.phase) + ': ' + action.keyword;
+  const show = text => {
+    label.textContent = text;
+    label.title = text;
+    failure.textContent = latestHelperFailure + (helperFailureCount > 1 ? ' | ' + helperFailureCount + ' helper failures' : '');
+    failure.title = failure.textContent;
+    failure.hidden = !helperFailureCount;
+    strip.hidden = false;
+  };
+  if (payload.reason === 'reset' || payload.reason === 'action_step_started') {
+    activeHelperWaitId = null;
+    activeStripAction = null;
+    helperFailureCount = 0;
+    latestHelperFailure = '';
+    label.textContent = '';
+    failure.textContent = '';
+    failure.hidden = true;
+    strip.hidden = true;
+    return;
+  }
+  if (payload.reason === 'action_started') {
+    activeHelperWaitId = null;
+    activeStripAction = payload;
+    show(actionLabel(payload) + ' | Running');
+  } else if (payload.reason === 'action_passed' || payload.reason === 'action_failed') {
+    activeHelperWaitId = null;
+    activeStripAction = payload;
+    const failed = payload.reason === 'action_failed';
+    if (failed && payload.phase !== 'main') {
+      helperFailureCount += 1;
+      latestHelperFailure = phaseLabel(payload.phase) + ': ' + payload.keyword + ' | Failed: ' + payload.error;
+    }
+    show(actionLabel(payload) + (failed ? ' | Failed: ' + payload.error : ' | Passed'));
+  } else if (payload.reason === 'helper_waiting') {
+    activeHelperWaitId = payload.id;
+    const isTextWait = payload.keyword === 'waitfortext';
+    const details = [
+      activeStripAction ? actionLabel(activeStripAction) : 'Waiting: ' + (isTextWait ? 'waitForText' : 'waitForElement'),
+      isTextWait ? 'Text: ' + JSON.stringify(payload.text || '') : 'Element: ' + (payload.target || ''),
+      'State: ' + payload.state,
+      'Max timeout: ' + payload.timeout + ' ms',
+    ];
+    if (isTextWait && payload.scope) details.push('Scope: ' + payload.scope);
+    if (isTextWait && payload.match) details.push('Match: ' + payload.match);
+    show(details.join(' | '));
+  } else if (payload.reason === 'helper_waiting_done' && payload.id === activeHelperWaitId) {
+    activeHelperWaitId = null;
+    if (!activeStripAction) {
+      strip.hidden = true;
+      label.textContent = '';
+    }
+  }
+});
