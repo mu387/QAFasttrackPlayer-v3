@@ -163,6 +163,30 @@ class FastTrackAutomation {
         }
     }
 
+    emitActionStrip(reason, phase, step, error = null) {
+        try {
+            this.mainWindow?.webContents?.send?.('automationHelperWaiting', {
+                reason, phase, keyword: resolveStepKeyword(step) || '',
+                stepNumber: this.currentStep + 1,
+                error: error ? (error.message || String(error)) : null,
+            });
+        } catch (notificationError) {
+            console.log('[action-strip] notification failed', notificationError?.message);
+        }
+    }
+
+    async observeMainAction(step) {
+        this.emitActionStrip('action_started', 'main', step);
+        try {
+            const result = await this.runStep(step);
+            this.emitActionStrip('action_passed', 'main', step);
+            return result;
+        } catch (error) {
+            this.emitActionStrip('action_failed', 'main', step, error);
+            throw error;
+        }
+    }
+
     emitProgress(patch = {}, includeSnapshot = false) {
         if (!this.onProgress) return;
         const payload = {
@@ -1602,6 +1626,7 @@ class FastTrackAutomation {
                 this.currentStep = j;
                 this.emitProgress({ reason: 'step_started' }, false);
                 const step = runner.steps[j];
+                this.emitActionStrip('action_step_started', 'main', step);
                 const stepPerf = this.perfStart('step', {
                     runnerIndex: i,
                     stepIndex: j,
@@ -1679,6 +1704,7 @@ class FastTrackAutomation {
                             beforeStepIndex,
                             ...this.formatPerfStep(beforeStep),
                         });
+                        this.emitActionStrip('action_started', 'before', beforeStep);
                         try {
                             const loopControlResult = await this.handleHelperLoopIfNeeded({
                                 helperStep: beforeStep,
@@ -1687,10 +1713,12 @@ class FastTrackAutomation {
                                 stepIndex: j,
                             });
                             if (loopControlResult) {
+                                this.emitActionStrip('action_passed', 'before', beforeStep);
                                 this.perfEnd(beforePerf, 'ok', { loopAction: loopControlResult.type });
                                 continue;
                             }
                             await this.runStep({ ...beforeStep, highlight: false });
+                            this.emitActionStrip('action_passed', 'before', beforeStep);
                             if (this.shouldAbortForCancellation()) {
                                 console.log('[automation] cancel requested after before-step execution');
                                 break;
@@ -1698,6 +1726,7 @@ class FastTrackAutomation {
                             this.perfEnd(beforePerf, 'ok');
                         } catch (error) {
                             console.log(error);
+                            this.emitActionStrip('action_failed', 'before', beforeStep, error);
                             if (this.shouldAbortForCancellation()) {
                                 console.log('[automation] cancel requested during before-step unwind');
                                 break;
@@ -1714,7 +1743,7 @@ class FastTrackAutomation {
                 }
 
                 try {
-                    await this.runStep(step);
+                    await this.observeMainAction(step);
                     if (this.shouldAbortForCancellation()) {
                         console.log('[automation] cancel requested after main step execution');
                         break;
@@ -1831,6 +1860,7 @@ class FastTrackAutomation {
                     const afterSteps = step.after_step;
                     for (let afterStepIndex = 0; afterStepIndex < afterSteps.length; afterStepIndex++) {
                         const afterStep = afterSteps[afterStepIndex];
+                        this.emitActionStrip('action_started', 'after', afterStep);
                         try {
                             const loopControlResult = await this.handleHelperLoopIfNeeded({
                                 helperStep: afterStep,
@@ -1839,16 +1869,19 @@ class FastTrackAutomation {
                                 stepIndex: j,
                             });
                             if (loopControlResult) {
+                                this.emitActionStrip('action_passed', 'after', afterStep);
                                 afterLoopNextStepIndex = loopControlResult.nextStepIndex;
                                 continue;
                             }
                             await this.runStep({ ...afterStep, highlight: false });
+                            this.emitActionStrip('action_passed', 'after', afterStep);
                             if (this.shouldAbortForCancellation()) {
                                 console.log('[automation] cancel requested after after-step execution');
                                 break;
                             }
                         } catch (error) {
                             console.log(error);
+                            this.emitActionStrip('action_failed', 'after', afterStep, error);
                             if (this.shouldAbortForCancellation()) {
                                 console.log('[automation] cancel requested during after-step unwind');
                                 break;

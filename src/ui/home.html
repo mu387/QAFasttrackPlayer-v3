@@ -1029,6 +1029,14 @@
 
     });
   </script>
+  <style>
+    #automationWaitStrip { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; padding: 12px 18px; background: #fbbf24; color: #111; font-weight: 700; border-top: 2px solid #b45309; box-shadow: 0 -3px 12px #0003; pointer-events: none; }
+    #automationWaitText { overflow-wrap: anywhere; white-space: normal; }
+    #automationWaitStrip .wait-dot { display: inline-block; width: 14px; height: 14px; margin-right: 10px; border-radius: 50%; background: #dc2626; animation: waitPulse 1s ease-in-out infinite; }
+    @keyframes waitPulse { 50% { opacity: .35; } }
+    @media (prefers-reduced-motion: reduce) { #automationWaitStrip .wait-dot { animation: none; } }
+  </style>
+  <div id="automationWaitStrip" hidden role="status" aria-live="polite"><span class="wait-dot" aria-hidden="true"></span><span id="automationWaitText"></span><div id="automationHelperFailure" hidden style="color: #7f1d1d; overflow-wrap: anywhere; margin-top: 4px;"></div></div>
 </body>
 
 </html>

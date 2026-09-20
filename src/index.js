@@ -2457,6 +2457,7 @@ const stopServer = () => {
 };
 
 const resetAutomationValues = () => {
+  mainWindow?.webContents?.send('automationHelperWaiting', { reason: 'reset' });
   // driver = null;
   currentStep = 0;
   currentRunner = 0;
@@ -3026,6 +3027,7 @@ const resumeExecution = () => {
 };
 
 const stopExecution = async () => {
+  mainWindow?.webContents?.send('automationHelperWaiting', { reason: 'reset' });
   const workerStatus = localQueueWorker.status();
   const activeQueueId = Number(workerStatus?.currentQueueId || 0);
   const activeQueueItemId = Number(workerStatus?.currentQueueItemId || 0);
@@ -3224,3 +3226,8 @@ const reconcileStaleQueueRunWithoutRecovery = async () => {
 
 
 
+
+// Transient wait feedback is shared by automation and manual keyword execution.
+require('./utils/visibleWait').progress.on('waiting', payload => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('automationHelperWaiting', payload);
+});

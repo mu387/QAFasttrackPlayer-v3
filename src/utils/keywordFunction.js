@@ -1,3 +1,4 @@
+const visibleWait = require('./visibleWait');
 const { PDFDocument } = require('pdf-lib');
 const axios = require('axios');
 const fs = require('fs').promises;
@@ -495,7 +496,10 @@ const waitForElement = async (driver, step) => {
     throw new Error('waitForElement requires a state value.');
   }
 
-  await driver.wait(async () => {
+  if (['exist', 'notexist', 'visible', 'hidden'].includes(state)) {
+    return visibleWait.waitVisible(driver, config, () => visibleWait.lookup(driver, driver, target, findElementBy));
+  }
+  return visibleWait.withProgress('waitforelement', config, () => driver.wait(async () => {
     const elements = await driver.findElements(findElementBy(target));
 
     switch (state) {
@@ -569,7 +573,7 @@ const waitForElement = async (driver, step) => {
       default:
         throw new Error(`Unsupported waitForElement state: ${config.state}`);
     }
-  }, config.timeout, `waitForElement timed out waiting for ${state} on ${target}`);
+  }, config.timeout, `waitForElement timed out waiting for ${state} on ${target}`, 200));
 };
 
 const resolveWaitForTextConfig = step => {
@@ -578,6 +582,7 @@ const resolveWaitForTextConfig = step => {
     text: '',
     scope: '',
     match: 'contains',
+    state: 'exist',
     timeout: 10000,
   };
 
@@ -595,6 +600,9 @@ const resolveWaitForTextConfig = step => {
       case 'target':
       case 'xpath':
         config.scope = entry.value;
+        break;
+      case 'state':
+        config.state = entry.value.toLowerCase();
         break;
       case 'match':
         config.match = entry.value.toLowerCase();
@@ -616,49 +624,9 @@ const resolveWaitForTextConfig = step => {
 
 const waitForText = async (driver, step) => {
   const config = resolveWaitForTextConfig(step);
-  const text = normalizeWhitespace(config.text);
-  const match = String(config.match || 'contains').trim().toLowerCase();
-
-  if (!text) {
-    throw new Error('waitForText requires a text value.');
-  }
-
-  if (match !== 'contains' && match !== 'exact') {
-    throw new Error(`Unsupported waitForText match: ${config.match}`);
-  }
-
-  await driver.wait(async () => {
-    const scopeElement = config.scope
-      ? await findElement(driver, config.scope)
-      : null;
-    return await driver.executeScript(
-      `
-        const root = arguments[0] || document.body;
-        const expectedText = arguments[1];
-        const matchMode = arguments[2];
-        const normalize = value => String(value || '').replace(/\\s+/g, ' ').trim();
-        const expected = normalize(expectedText);
-        if (!expected) {
-          return false;
-        }
-
-        const nodes = [root, ...Array.from(root.querySelectorAll('*'))];
-        return nodes.some(node => {
-          const textValue = normalize(node.innerText || node.textContent || '');
-          if (!textValue) {
-            return false;
-          }
-
-          return matchMode === 'exact'
-            ? textValue === expected
-            : textValue.includes(expected);
-        });
-      `,
-      scopeElement,
-      text,
-      match,
-    );
-  }, config.timeout, `waitForText timed out waiting for text ${text}`);
+  if (!['exist', 'notexist'].includes(config.state)) throw new Error('Unsupported waitForText state: ' + config.state);
+  return visibleWait.waitVisible(driver, config,
+    () => visibleWait.lookup(driver, driver, config.scope, findElementBy).then(elements => elements.slice(0, 1)), async () => null);
 };
 
 const exist = async (driver, step) => {
