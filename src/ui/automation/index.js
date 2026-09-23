@@ -1914,10 +1914,15 @@ class FastTrackAutomation {
                     // tear down at the end of every test case (runner), not just the final one
                     (step.isLastStepInRunner || step.isLastTestCaseStep || (step.lastStep && isLastRunner));
                 if (shouldTeardownDrivers) {
-                    try {
-                        await this.destoryDrivers();
-                    } catch (err) {
-                        console.log('driver cleanup failed', err);
+                    if (this.webDriver?.driver) {
+                        try {
+                            await quitWithTimeout(this.webDriver.driver);
+                        } catch (error) {
+                            console.log('web driver quit failed (ignored)', error.message || error);
+                        } finally {
+                            removeActiveWebDriver(this.webDriver.driver);
+                            this.webDriver.driver = null;
+                        }
                     }
                     if (this.shouldAbortForCancellation()) {
                         console.log('[automation] cancel requested after driver teardown');
