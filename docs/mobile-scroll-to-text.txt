@@ -1,0 +1,43 @@
+mobileScrollToText input
+
+Android: scrollableViewIndex_targetElementIndex_text
+Example: 2_0_Order Status
+The first two fields select the scrollable container and target element instances.
+Remaining underscores belong to the text. Existing Android behavior is unchanged.
+
+iOS: plain text, with no container or element indexes.
+Examples: Order Status, Order_Status_Pending
+The entire value is searched, including underscores and numeric prefixes.
+For example, 2_0_Order Status searches for that literal text on iOS; it is not
+treated as Android index syntax. Do not prepend Android indexes to iOS values.
+
+Existing matching rules, scrolling direction, attempt limit, and error handling
+are unchanged. This applies to both active and legacy iOS execution paths.
+
+Regression: node scripts/mobile_scroll_text_regression.js
+Connected-device validation remains required before release.
+
+Directional keywords in the active automation router
+
+mobileScrollToTextUp and mobileScrollToTextDown select the corresponding native
+direction. The plain mobileScrollToText path is unchanged.
+
+Android keeps the container/target index format, including underscores in text.
+The new directional path checks visible matches inside the selected container,
+then scrolls that container with mobile: scrollGesture (80% per gesture).
+It stops on a matching visible element, at the scroll boundary, or after ten
+gestures. A final lookup is performed after the last gesture.
+Missing containers, invalid input, absent text, and driver errors throw normally.
+This path requires UiAutomator2 mobile: scrollGesture support; no fallback
+gesture or driver/server configuration change is performed.
+
+iOS retains its plain-text input, matching rules and ten-attempt search, using
+the selected up/down direction with mobile: scroll.
+
+These are active-runner keyword methods. Existing helper error handling and
+main-step reporting remain unchanged. No keyword catalog/database rows, manual
+runner startup paths, legacy scroll aliases or driver lifecycle are changed.
+
+Regression: node scripts/mobile_scroll_direction_regression.js
+Native gesture reference:
+https://github.com/appium/appium-uiautomator2-driver/blob/master/docs/android-mobile-gestures.md#mobile-scrollgesture

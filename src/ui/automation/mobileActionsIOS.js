@@ -1,6 +1,72 @@
 const { remote } = require('webdriverio');
+const helperLookup = require('./helperLookup');
+const mobileWait = require('./mobileWait');
+const { mobileScroll } = require('./mobileScroll');
+const mobileCapture = require('./mobileCapture');
+const mobileElementActions = require('./mobileElementActions');
 
 class MobileActionsIOS {
+  async mobileTapOffset(step) {
+    return mobileElementActions.mobileTapOffset(this.driver, step, 'ios');
+  }
+
+  async mobileToastExist(step) {
+    return mobileElementActions.mobileToastExist(this.driver, step, 'ios');
+  }
+
+  async getElementValue(step) {
+    return mobileCapture.getElementValue(this.driver, step, 'ios');
+  }
+
+  async mobileScroll(step) {
+    return mobileScroll(this.driver, step, 'ios');
+  }
+
+  async waitForElement(step) {
+    return mobileWait.wait(this.driver, step, 'ios', 'waitForElement');
+  }
+
+  async waitForText(step) {
+    return mobileWait.wait(this.driver, step, 'ios', 'waitForText');
+  }
+
+  async mobileClear(step) {
+    const index = helperLookup.explicitTargetIndex(step, 'mobileClear') ?? 1;
+    const selector = helperLookup.parseLocator(step.xPath, {
+      xpath: value => value,
+      id: value => 'id=' + value,
+      accessibilityid: value => '~' + value,
+      iospredicate: value => '-ios predicate string:' + value,
+      iosclasschain: value => '-ios class chain:' + value,
+    }, 'mobileClear');
+    if (!this.driver?.sessionId) {
+      throw new Error('mobileClear requires an active iOS Appium session.');
+    }
+    const elements = await this.driver.$$(selector);
+    const element = elements[index - 1];
+    if (!element) throw new Error('mobileClear element not found.');
+    await element.clearValue();
+  }
+
+  async ifExist(step) {
+    const index = helperLookup.explicitTargetIndex(step);
+    const selector = helperLookup.parseLocator(step.xPath, {
+      xpath: value => value,
+      id: value => 'id=' + value,
+      accessibilityid: value => '~' + value,
+      iospredicate: value => '-ios predicate string:' + value,
+      iosclasschain: value => '-ios class chain:' + value,
+    });
+    if (!this.driver?.sessionId) {
+      throw new Error('ifExist requires an active iOS Appium session.');
+    }
+    const elements = await helperLookup.immediateLookup(
+      () => this.driver.getTimeouts(),
+      timeouts => this.driver.setTimeout(timeouts),
+      () => this.driver.$$(selector),
+    );
+    return index == null ? elements.length > 0 : Boolean(elements[index - 1]);
+  }
   driver = null;
 
   async mobileOpenAppIOS(step) {
@@ -12,6 +78,7 @@ class MobileActionsIOS {
         logLevel: 'info',
         capabilities: JSON.parse(step.value),
       };
+      this.sessionOptions = structuredClone(wdOpts);
       this.driver = await remote(wdOpts);
       this.driver.setTimeout({ implicit: 10000 });
     } catch (error) {
@@ -60,12 +127,8 @@ class MobileActionsIOS {
     });
   }
 
-  async mobileScrollToTextIOS(step) {
-    let text = step?.value || '';
-    const valArr = text.split('_');
-    if (valArr.length > 1) {
-      text = valArr.slice(2).join('_') || text;
-    }
+  async mobileScrollToTextIOS(step, direction = 'down') {
+    const text = step?.value || '';
 
     const escaped = String(text).replace(/'/g, "\\'");
     const selector = `-ios predicate string:(label CONTAINS '${escaped}' OR name CONTAINS '${escaped}' OR value CONTAINS '${escaped}')`;
@@ -73,7 +136,7 @@ class MobileActionsIOS {
     for (let i = 0; i < 10; i++) {
       const el = await this.driver.$(selector);
       if (await el.isExisting()) return;
-      await this.driver.execute('mobile: scroll', { direction: 'down' });
+      await this.driver.execute('mobile: scroll', { direction });
     }
     throw new Error(`Text not found: ${text}`);
   }

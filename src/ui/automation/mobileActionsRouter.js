@@ -1,5 +1,6 @@
 const { MobileActions } = require('./mobileActions');
 const { MobileActionsIOS } = require('./mobileActionsIOS');
+const { ensureMobileSession } = require('./mobileSession');
 
 const detectPlatform = caps => {
   const platformName =
@@ -20,17 +21,11 @@ class MobileActionsRouter {
     this.driver = this.platform === 'ios' ? this.ios.driver : this.android.driver;
   }
 
+  async ensureSession(checkCancellation) {
+    return ensureMobileSession(this, checkCancellation);
+  }
+
   async mobileOpenApp(step) {
-    // ensure any previous session is torn down before opening a new one
-    if (this.driver) {
-      try {
-        await this.driver.deleteSession();
-      } catch (err) {
-        console.log('previous mobile session cleanup failed (ignored)', err?.message || err);
-      } finally {
-        this.driver = null;
-      }
-    }
     let caps = null;
     try {
       caps = JSON.parse(step.value);
@@ -47,7 +42,10 @@ class MobileActionsRouter {
     this._syncDriver();
   }
 
-  async mobileCloseApp(step) {
+  async mobileCloseApp(step, checkCancellation) {
+    const provider = this.platform === 'ios' ? this.ios : this.android;
+    if (provider.driver || provider.sessionOptions) await this.ensureSession(checkCancellation);
+    checkCancellation?.();
     try {
       if (this.platform === 'ios') {
         await this.ios.mobileCloseAppIOS(step);
@@ -56,15 +54,26 @@ class MobileActionsRouter {
       }
     } finally {
       try {
-        if (this.driver) {
-          await this.driver.deleteSession();
-        }
+        if (provider.driver) await provider.driver.deleteSession();
       } catch (err) {
         console.log('mobile deleteSession failed (ignored)', err?.message || err);
       }
-      this.driver = null;
+      provider.driver = null;
+      provider.sessionOptions = null;
       this._syncDriver();
     }
+  }
+
+  async mobileTapOffset(step) {
+    return this.platform === 'ios'
+      ? this.ios.mobileTapOffset(step)
+      : this.android.mobileTapOffset(step);
+  }
+
+  async mobileToastExist(step) {
+    return this.platform === 'ios'
+      ? this.ios.mobileToastExist(step)
+      : this.android.mobileToastExist(step);
   }
 
   async mobileTap(step) {
@@ -91,10 +100,26 @@ class MobileActionsRouter {
       : this.android.mobileLongPress(step);
   }
 
+  async mobileClear(step) {
+    if (!['android', 'ios'].includes(this.platform)) {
+      throw new Error('mobileClear requires an Android or iOS execution target.');
+    }
+    return this.platform === 'ios'
+      ? this.ios.mobileClear(step)
+      : this.android.mobileClear(step);
+  }
+
   async mobileFill(step) {
     return this.platform === 'ios'
       ? this.ios.mobileFillIOS(step)
       : this.android.mobileFill(step);
+  }
+
+  async mobileScroll(step) {
+    if (!['android', 'ios'].includes(this.platform)) throw new Error('Unsupported mobileScroll platform: ' + this.platform);
+    return this.platform === 'ios'
+      ? this.ios.mobileScroll(step)
+      : this.android.mobileScroll(step);
   }
 
   async mobileSwipe(step) {
@@ -107,6 +132,18 @@ class MobileActionsRouter {
     return this.platform === 'ios'
       ? this.ios.mobileScrollToTextIOS(step)
       : this.android.mobileScrollToText(step);
+  }
+
+  async mobileScrollToTextUp(step) {
+    return this.platform === 'ios'
+      ? this.ios.mobileScrollToTextIOS(step, 'up')
+      : this.android.mobileScrollToTextDirection(step, 'up');
+  }
+
+  async mobileScrollToTextDown(step) {
+    return this.platform === 'ios'
+      ? this.ios.mobileScrollToTextIOS(step, 'down')
+      : this.android.mobileScrollToTextDirection(step, 'down');
   }
 
   async mobileElementExist(step) {

@@ -145,13 +145,14 @@ const mobileElementExist = async (driver, step) => {
   }
 };
 const mobileElementNotExist = async (driver, step) => {
-  try {
-    await getElement(driver, step);
-    console.log('mobileElementNotExists - Element not found');
-    throw new Error('Element Exists');
-  } catch (error) {
-    console.log('mobileElementNotExists - Element found');
+  if (!driver?.sessionId) {
+    throw new Error('mobileElementNotExist requires an active Android Appium session.');
   }
+  if (!String(step.xPath ?? '').trim()) {
+    throw new Error('mobileElementNotExist requires a locator.');
+  }
+  const elements = await driver.$$(step.xPath);
+  if (elements.length > 0) throw new Error('Element Exists');
 };
 
 //checks if input exits and validate input value

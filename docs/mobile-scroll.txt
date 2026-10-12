@@ -1,0 +1,40 @@
+mobileScroll helper
+
+Use as a before-step or after-step helper for an Android or iOS action.
+Value: DIRECTION_PIXELS
+Examples: UP_300, DOWN_300, LEFT_200, RIGHT_200
+Directions are case-insensitive. Distance must be a positive integer and less
+than the current window dimension on the selected axis. Oversized values are
+reported rather than clamped. No locator is required.
+
+Android follows the Java framework scroll(ScrollDirection, int) reference:
+a centered touch-pointer gesture, 300ms movement, and finger motion opposite
+the requested content-scroll direction. The pointer travel equals the requested
+distance, including odd distances. Input actions are released even after errors.
+This does not close or delete the Appium session.
+
+iOS uses mobile: scroll with the requested direction and a normalized distance:
+pixels / height for UP/DOWN, pixels / width for LEFT/RIGHT.
+This is a native approximation, not a guarantee that content moves exactly that
+many physical pixels. Appium window coordinates and device pixel density differ.
+
+Failure/result contract:
+Invalid input, inactive sessions, and gesture errors are logged by the existing
+helper flow. The main action still runs and determines its own Passed/Failed
+result. The helper has no separate persisted test result. Cancellation retains
+the existing runner behavior.
+
+Existing mobileSwipe and mobileScrollToText/Up/Down are unchanged.
+The server-managed helper catalog must contain mobileScroll where needed; this
+player-only change does not insert catalog/database rows or add a standalone
+manual keyword picker entry.
+
+Java reference: Downloads/codeless.txt, scroll() at line 1580 and swipefinger()
+at line 2397. The oldscroll implementations are not used.
+iOS native ratio implementation:
+https://github.com/appium/WebDriverAgent/blob/master/WebDriverAgentLib/Categories/XCUIElement%2BFBScrolling.m
+
+Validation: node scripts/mobile_scroll_regression.js
+Mocked tests include all four directions, even/odd distances, bad input, window
+bounds, native errors, input cleanup, and before/after helper non-failing behavior.
+Connected Android and iOS device validation remains required before release.

@@ -1,0 +1,55 @@
+Shared wait helpers
+
+waitForElement and waitForText use the linked main step's executionTarget,
+execution_target, or target. Without an explicit target, the shared dispatcher
+uses the provider supporting the main keyword. Both before and after helpers
+are routed this way. Web continues through its existing runner and providers.
+
+Mobile input
+
+waitForElement:
+  exist
+  state=visible >> timeout=5000
+  state=notexist >> target=id=loading >> timeout=5000
+
+States: exist, notexist, visible, hidden, enabled, disabled, selected, notselected.
+Native exist/notexist means present/absent; visible/hidden checks display state.
+Positive states match any selected candidate. Negative property states require
+all candidates to have that property false. Absence satisfies hidden/notexist,
+but does not satisfy disabled/notselected.
+
+waitForText:
+  Ready
+  text=Ready >> match=exact >> timeout=5000
+  text=Loading >> state=notexist >> scope=accessibilityId=status
+
+Mobile waits inherit the main locator and explicit one-based element index.
+target, scope, and xpath supply a helper-owned locator and discard the parent's
+index. These options are aliases for the native target, not a new traversal root.
+Missing locators and unsupported platform strategies are helper errors.
+
+waitForText reads the matched visible native elements, not the whole screen or
+descendant subtree. It uses getText(), then nonempty text/value attributes on
+Android or label/value attributes on iOS as fallbacks. Whitespace is normalized;
+matching is case-sensitive contains (default) or exact. exist is the default
+state; notexist waits until no selected visible element has matching text.
+An absent native target satisfies the notexist text state.
+
+Timeouts are milliseconds, default 10000; explicit values must be finite and
+positive. Conditions are polled at up to 200ms intervals. Appium command latency
+can extend the wall-clock duration. Implicit timeout is temporarily zero during
+polling and restored on success, timeout, cancellation, or driver error.
+
+Errors and reporting
+
+Timeouts, invalid inputs, and driver errors are reported as helper failures by
+the existing runner. They DO NOT fail or skip the linked main step. The main
+action executes normally and determines its own Passed/Failed result. Helpers
+do not receive separate persisted test results. Cancellation still stops the run.
+
+This does not alter ifExist's skip/pass contract or mobileClear's failure contract,
+web wait semantics, startup, app/session lifecycle, or ordinary main-keyword routing.
+Use the existing waitForElement/waitForText helper catalog entries; no new names.
+
+Validation: node scripts/mobile_wait_regression.js
+Connected Android and iOS validation remains required before release.

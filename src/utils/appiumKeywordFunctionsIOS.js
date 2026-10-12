@@ -53,9 +53,7 @@ const mobileSwipeIOS = async (driver, step) => {
 };
 
 const mobileScrollToTextIOS = async (driver, step) => {
-  let text = step?.value || '';
-  const valArr = text.split('_');
-  if (valArr.length > 1) text = valArr.slice(2).join('_') || text;
+  const text = step?.value || '';
 
   const escaped = String(text).replace(/'/g, "\\'");
   const selector = `-ios predicate string:(label CONTAINS '${escaped}' OR name CONTAINS '${escaped}' OR value CONTAINS '${escaped}')`;

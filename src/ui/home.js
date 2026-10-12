@@ -18,6 +18,8 @@ const serverText = document.querySelector('#serverText');
 const pauseBtn = document.querySelector('#pause');
 const stopExecutionBtn = document.querySelector('#stopExecution');
 const resumeBtn = document.querySelector('#resume');
+const nextStepBtn = document.querySelector('#nextStepExecution');
+let executionControlMode = null;
 let automationRunning = false;
 
 const setSidebarActionVisible = (element, visible) => {
@@ -27,7 +29,12 @@ const setSidebarActionVisible = (element, visible) => {
 };
 
 const setExecutionControlState = state => {
-  const mode = String(state || 'idle');
+  if (state === 'idle') executionControlMode = null;
+  const mode = state === 'idle' || state === 'decision'
+    ? state
+    : executionControlMode || String(state || 'idle');
+  setSidebarActionVisible(nextStepBtn, ['paused', 'pausing', 'stepping'].includes(mode));
+  if (nextStepBtn) nextStepBtn.disabled = mode !== 'paused';
   if (mode === 'running') {
     setSidebarActionVisible(pauseBtn, true);
     setSidebarActionVisible(stopExecutionBtn, true);
@@ -35,7 +42,7 @@ const setExecutionControlState = state => {
     return;
   }
 
-  if (mode === 'paused') {
+  if (['paused', 'pausing', 'stepping'].includes(mode)) {
     setSidebarActionVisible(pauseBtn, false);
     setSidebarActionVisible(stopExecutionBtn, true);
     setSidebarActionVisible(resumeBtn, true);
@@ -52,6 +59,7 @@ const setExecutionControlState = state => {
   setSidebarActionVisible(pauseBtn, false);
   setSidebarActionVisible(stopExecutionBtn, false);
   setSidebarActionVisible(resumeBtn, false);
+  clearAutomationActionStrip();
 };
 // Disable in-app control of Appium/WinAppDriver; they should be run externally.
 const DEVICE_SERVER_CONTROL_DISABLED = true;
@@ -1032,7 +1040,7 @@ pauseBtn.addEventListener('click', () => {
   }
   express.pauseExecution();
   automationRunning = true;
-  setExecutionControlState('paused');
+  setExecutionControlState('pausing');
 });
 
 stopExecutionBtn.addEventListener('click', async () => {
@@ -1053,6 +1061,25 @@ stopExecutionBtn.addEventListener('click', async () => {
   } finally {
     automationRunning = false;
     setExecutionControlState('idle');
+  }
+});
+
+express.executionControlState?.((event, { mode }) => {
+  executionControlMode = mode;
+  automationRunning = mode !== 'idle';
+  setExecutionControlState(mode);
+});
+
+nextStepBtn?.addEventListener('click', async event => {
+  event.stopPropagation();
+  if (nextStepBtn.disabled || executionControlMode !== 'paused') return;
+  nextStepBtn.disabled = true;
+  try {
+    const accepted = await express.nextStepExecution();
+    if (!accepted && executionControlMode === 'paused') nextStepBtn.disabled = false;
+  } catch (error) {
+    console.log('next step failed', error?.message || error);
+    nextStepBtn.disabled = executionControlMode !== 'paused';
   }
 });
 
@@ -1170,11 +1197,16 @@ const tdColor = (td, step) => {
       td.style.color = '#ffffff';
 
       setTimeout(() => {
-        td.scrollIntoView({
-          behavior: 'smooth',   
-          block: 'center',      
-          inline: 'nearest'
-        });
+        const logViewport = td.closest('.log-table-scroll');
+        if (logViewport) {
+          const rowBounds = td.getBoundingClientRect();
+          const viewportBounds = logViewport.getBoundingClientRect();
+          logViewport.scrollTo({
+            top: logViewport.scrollTop + rowBounds.top - viewportBounds.top
+              - (logViewport.clientHeight - rowBounds.height) / 2,
+            behavior: 'smooth',
+          });
+        }
       }, 100);  
     
   }
@@ -1689,7 +1721,7 @@ const keywordArr = [
   {
     id: 134,
     name: 'Mobile Fill',
-    value: 'mobileFll',
+    value: 'mobileFill',
     client_id: null,
     keyword_combination_ids: null,
     created_at: '2024-03-09T14:44:49.000000Z',
@@ -1798,6 +1830,11 @@ const keywordArr = [
     keyword_combination_names: null,
   },
 ];
+
+keywordArr.push(
+  { name: 'Mobile Tap Offset', value: 'mobileTapOffset' },
+  { name: 'Mobile Toast Exist', value: 'mobileToastExist' },
+);
 
 keywordArr.forEach(k => {
   const option = document.createElement('option');
@@ -1955,11 +1992,39 @@ let activeHelperWaitId = null;
 let activeStripAction = null;
 let helperFailureCount = 0;
 let latestHelperFailure = '';
+let manualActionFeedbackActive = false;
+
+function clearAutomationActionStrip() {
+  activeHelperWaitId = null;
+  activeStripAction = null;
+  helperFailureCount = 0;
+  latestHelperFailure = '';
+  const strip = document.getElementById('automationWaitStrip');
+  const label = document.getElementById('automationWaitText');
+  const failure = document.getElementById('automationHelperFailure');
+  if (strip) strip.hidden = true;
+  for (const element of [label, failure]) {
+    if (!element) continue;
+    element.textContent = '';
+    element.title = '';
+  }
+  if (failure) failure.hidden = true;
+}
+
+express.testExecuteOutput((_event, payload) => {
+  manualActionFeedbackActive = payload?.output === '';
+  if (!automationRunning) clearAutomationActionStrip();
+});
+
 express.automationHelperWaiting((_event, payload) => {
   const strip = document.getElementById('automationWaitStrip');
   const label = document.getElementById('automationWaitText');
   const failure = document.getElementById('automationHelperFailure');
   if (!strip || !label || !failure) return;
+  if (!automationRunning && (!manualActionFeedbackActive || String(payload.reason || '').startsWith('action_'))) {
+    clearAutomationActionStrip();
+    return;
+  }
   const phaseLabel = phase => phase === 'before' ? 'Before helper' : phase === 'after' ? 'After helper' : 'Main action';
   const actionLabel = action => 'Step ' + action.stepNumber + ' | ' + phaseLabel(action.phase) + ': ' + action.keyword;
   const show = text => {
@@ -1971,14 +2036,7 @@ express.automationHelperWaiting((_event, payload) => {
     strip.hidden = false;
   };
   if (payload.reason === 'reset' || payload.reason === 'action_step_started') {
-    activeHelperWaitId = null;
-    activeStripAction = null;
-    helperFailureCount = 0;
-    latestHelperFailure = '';
-    label.textContent = '';
-    failure.textContent = '';
-    failure.hidden = true;
-    strip.hidden = true;
+    clearAutomationActionStrip();
     return;
   }
   if (payload.reason === 'action_started') {

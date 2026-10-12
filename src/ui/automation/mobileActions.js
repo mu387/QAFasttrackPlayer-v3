@@ -1,18 +1,72 @@
 const { remote, TouchAction } = require('webdriverio');
+const helperLookup = require('./helperLookup');
+const mobileWait = require('./mobileWait');
+const { mobileScroll } = require('./mobileScroll');
+const mobileCapture = require('./mobileCapture');
+const mobileElementActions = require('./mobileElementActions');
 
 class MobileActions{
+  async mobileTapOffset(step) {
+    return mobileElementActions.mobileTapOffset(this.driver, step, 'android');
+  }
+
+  async mobileToastExist(step) {
+    return mobileElementActions.mobileToastExist(this.driver, step, 'android');
+  }
+
+  async getElementValue(step) {
+    return mobileCapture.getElementValue(this.driver, step, 'android');
+  }
+
+  async mobileScroll(step) {
+    return mobileScroll(this.driver, step, 'android');
+  }
+
+  async waitForElement(step) {
+    return mobileWait.wait(this.driver, step, 'android', 'waitForElement');
+  }
+
+  async waitForText(step) {
+    return mobileWait.wait(this.driver, step, 'android', 'waitForText');
+  }
+
+  async mobileClear(step) {
+    const index = helperLookup.explicitTargetIndex(step, 'mobileClear') ?? 1;
+    const selector = helperLookup.parseLocator(step.xPath, {
+      xpath: value => value,
+      id: value => 'id=' + value,
+      accessibilityid: value => '~' + value,
+      android: value => 'android=' + value,
+    }, 'mobileClear');
+    if (!this.driver?.sessionId) {
+      throw new Error('mobileClear requires an active Android Appium session.');
+    }
+    const elements = await this.driver.$$(selector);
+    const element = elements[index - 1];
+    if (!element) throw new Error('mobileClear element not found.');
+    await element.clearValue();
+  }
+
+  async ifExist(step) {
+    const index = helperLookup.explicitTargetIndex(step);
+    const selector = helperLookup.parseLocator(step.xPath, {
+      xpath: value => value,
+      id: value => 'id=' + value,
+      accessibilityid: value => '~' + value,
+      android: value => 'android=' + value,
+    });
+    if (!this.driver?.sessionId) {
+      throw new Error('ifExist requires an active Android Appium session.');
+    }
+    const elements = await helperLookup.immediateLookup(
+      () => this.driver.getTimeouts(),
+      timeouts => this.driver.setTimeout(timeouts),
+      () => this.driver.$$(selector),
+    );
+    return index == null ? elements.length > 0 : Boolean(elements[index - 1]);
+  }
     driver=null;
   async mobileOpenApp ( step ) {
-        // clean up any existing session before starting a new one
-        if (this.driver) {
-          try {
-            await this.driver.deleteSession();
-          } catch (err) {
-            console.log('previous mobile session cleanup failed (ignored)', err?.message || err);
-          } finally {
-            this.driver = null;
-          }
-        }
         let wdOpts = null;
         try {
           wdOpts = {
@@ -22,6 +76,7 @@ class MobileActions{
             // capabilities,
              capabilities: JSON.parse(step.value),
           };
+          this.sessionOptions = structuredClone(wdOpts);
           this.driver = await remote(wdOpts);
           this.driver.setTimeout({ implicit: 10000 });
           if (!this.driver?.sessionId) {
@@ -97,6 +152,39 @@ class MobileActions{
       .perform();
   };
   
+  async mobileScrollToTextDirection(step, direction) {
+    if (!['up', 'down'].includes(direction)) throw new Error('Unsupported scroll direction: ' + direction);
+    if (!this.driver?.sessionId) throw new Error('Directional scroll requires an active Android Appium session.');
+    const value = String(step?.value ?? '');
+    const indexed = value.match(/^(\d+)_(\d+)_(.*)$/s);
+    const containerIndex = indexed ? Number(indexed[1]) : 0;
+    const targetIndex = indexed ? Number(indexed[2]) : 0;
+    const text = indexed ? indexed[3] : value;
+    if (!text.trim()) throw new Error('Directional scroll requires text.');
+    if (!Number.isSafeInteger(containerIndex) || !Number.isSafeInteger(targetIndex)) {
+      throw new Error('Directional scroll indexes must be non-negative integers.');
+    }
+    const containerSelector = 'android=new UiSelector().scrollable(true).instance(' + containerIndex + ')';
+    const targetSelector = 'android=new UiSelector().text(' + JSON.stringify(text) + ').instance(' + targetIndex + ')';
+    let canScrollMore = true;
+    for (let attempt = 0; attempt <= 10; attempt++) {
+      const containers = await this.driver.$$(containerSelector);
+      const container = containers[0];
+      if (!container?.elementId) throw new Error('Scrollable container not found: ' + containerIndex);
+      const elements = await container.$$(targetSelector);
+      for (const element of elements) {
+        if (await element.isDisplayed()) return;
+      }
+      if (!canScrollMore || attempt === 10) break;
+      canScrollMore = await this.driver.execute('mobile: scrollGesture', {
+        elementId: container.elementId,
+        direction,
+        percent: 0.8,
+      });
+    }
+    throw new Error('Text not found: ' + text);
+  }
+
   async  mobileScrollToText  (
     step,
     forward = false,
@@ -138,13 +226,14 @@ class MobileActions{
     }
   };
   async  mobileElementNotExist(step){
-    try {
-      await this.getElement(step);
-      console.log('mobileElementNotExists - Element found');
-      throw new Error('Element Exists');
-    } catch (error) {
-      console.log('mobileElementNotExists - Element not found');
+    if (!this.driver?.sessionId) {
+      throw new Error('mobileElementNotExist requires an active Android Appium session.');
     }
+    if (!String(step.xPath ?? '').trim()) {
+      throw new Error('mobileElementNotExist requires a locator.');
+    }
+    const elements = await this.driver.$$(step.xPath);
+    if (elements.length > 0) throw new Error('Element Exists');
   };
   
   //checks if input exits and validate input value
