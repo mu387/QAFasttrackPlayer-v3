@@ -113,6 +113,12 @@
     };
 
     const init = () => {
+      elements.reExecuteDataModal?.addEventListener('hidden.bs.modal', () => {
+        if (pendingReExecuteData && !suppressReExecuteModal) {
+          reopenPendingReExecuteModal();
+        }
+      });
+
       elements.reExecuteModalExecuteBtn?.addEventListener('click', () => {
         applyReExecuteChanges();
         clearPendingState();

@@ -49,6 +49,8 @@ contextBridge.exposeInMainWorld('express', {
 
   pauseExecution: () => ipcRenderer.invoke('pauseExecution'),
   resumeExecution: () => ipcRenderer.invoke('resumeExecution'),
+  nextStepExecution: () => ipcRenderer.invoke('nextStepExecution'),
+  executionControlState: callback => ipcRenderer.on('executionControlState', callback),
   stopExecution: () => ipcRenderer.invoke('stopExecution'),
 
   reExecuteStep: () => ipcRenderer.invoke('reExecuteStep'),

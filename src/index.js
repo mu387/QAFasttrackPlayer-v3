@@ -32,6 +32,9 @@ const { getStepLogUrl, getUploadVideoUrl } = require('./utils/endpoint');
 const { setRuntimeConfig, getRuntimeConfig } = require('./utils/runtimeConfig');
 const { LocalQueueWorker } = require('./utils/localQueueWorker');
 const { FastTrackAutomation } = require('../src/ui/automation/index');
+const { MobileActionsRouter } = require('./ui/automation/mobileActionsRouter');
+const { executeManualMobileKeyword } = require('./ui/automation/manualMobileKeywords');
+const playerMobileDriver = new MobileActionsRouter();
 const { WebActions, activeWebDrivers, getLastWebActionsInstance, clearLastWebActionsInstance, removeActiveWebDriver, quitWithTimeout } =require('./ui/automation/webActions');
 const { generateSeleniumScripts } = require('./utils/seleniumExporter');
 const { parseApiCallValue } = require('./utils/apiCallContract');
@@ -969,6 +972,7 @@ const createWindow = () => {
 
   ipcMain.handle('pauseExecution', pauseExecution);
   ipcMain.handle('resumeExecution', resumeExecution);
+  ipcMain.handle('nextStepExecution', event => resumeExecution(event, true));
   ipcMain.handle('stopExecution', stopExecution);
 
   ipcMain.handle('reExecuteStep', reExecuteStep);
@@ -1065,7 +1069,8 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   registerRunnerProtocolClient();
-  isReExecuteFlag = false;
+  const persisted = loadPersistedQueueWorkerConfig();
+  isReExecuteFlag = persisted.reExecuteOnFail === true || persisted.reExecuteOnFail === 'true';
   executionDelayMs = getPersistedExecutionDelay();
   pendingProtocolUrl = extractProtocolFromArgv(process.argv) || pendingProtocolUrl;
   createWindow();
@@ -1283,6 +1288,7 @@ const executeAutomationPayload = async (payload, options = {}) => {
     const queueRunReExecuteEnabled = isReExecuteFlag;
 
     fastTrackAutomation = new FastTrackAutomation({
+      mobileDriver: playerMobileDriver,
       mainWindow,
       testRunnerStepDataOriginal: structuredClone(test_runner_steps),
       testRunner: test_runner,
@@ -1697,7 +1703,6 @@ const startServer = (mainWindow, portOverride) => {
         console.log('startServer notify error', err?.message || err);
       }
       const persisted = loadPersistedQueueWorkerConfig();
-      isReExecuteFlag = false;
       executionDelayMs = getPersistedExecutionDelay();
       const initialEnabled =
         persisted.enabled !== undefined
@@ -1984,6 +1989,12 @@ const testExecute = async (e, { locator, keyword, value="", expectedOutput="" })
     value,
   });
   mainWindow.webContents.send('testExecuteOutput', {output: ''});
+
+  const mobileResult = await executeManualMobileKeyword(playerMobileDriver, { locator, keyword, value });
+  if (mobileResult) {
+    mainWindow.webContents.send('testExecuteOutput', { output: mobileResult.output });
+    return mobileResult;
+  }
 
   const normalizedKeyword = String(keyword || '').trim();
   const normalizedKeywordLower = normalizedKeyword.toLowerCase();
@@ -3022,8 +3033,8 @@ const pauseExecution = () => {
   fastTrackAutomation.pauseExecution();
   return true;
 };
-const resumeExecution = () => {
-  fastTrackAutomation.resumeExecution();
+const resumeExecution = (event, singleStep = false) => {
+  return fastTrackAutomation?.resumeExecution(singleStep) ?? false;
 };
 
 const stopExecution = async () => {

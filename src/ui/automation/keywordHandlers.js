@@ -1,9 +1,16 @@
+const { createMobileCancellationCheck } = require('./mobileSession');
+
 async function executeMobileKeyword(context, keywordNameRaw, keywordMethod, step) {
     const keywordPerf = context.perfStart('keyword', {
         keyword: keywordNameRaw,
         channel: 'mobile',
     });
-    await context.mobileDriver[keywordMethod](step);
+    const checkCancellation = createMobileCancellationCheck(context);
+    if (!['mobileopenapp', 'mobilecloseapp'].includes(String(keywordMethod).toLowerCase())) {
+        await context.mobileDriver.ensureSession(checkCancellation);
+    }
+    checkCancellation();
+    await context.mobileDriver[keywordMethod](step, checkCancellation);
     context.perfEnd(keywordPerf, 'ok');
 }
 

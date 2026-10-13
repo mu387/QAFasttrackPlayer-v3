@@ -7,6 +7,7 @@ const { MobileActionsRouter } = require('./mobileActionsRouter');
 const runtimeVariables = require('./runtimeVariables');
 const sessionPolicy = require('./sessionPolicy');
 const keywordHandlers = require('./keywordHandlers');
+const helperDispatch = require('./helperDispatch');
 
 const resolveStepKeyword = (step) => {
     const candidates = [
@@ -43,6 +44,10 @@ class FastTrackAutomation {
     currentRunner = 0;
     currentStep = 0;
     isPaused = false;
+    singleStepRequested = false;
+    pauseReady = false;
+    pauseAtNextRunner = false;
+    executionLoopActive = false;
     selectedScreen = null;
     isReExecuteFlag = false;
     webDriver = null;
@@ -104,7 +109,7 @@ class FastTrackAutomation {
         console.log(`[perf][${stamp}][#${handle.seq}] END ${handle.label} outcome=${outcome}`, payload);
     }
 
-    constructor({ testRunnerStepDataOriginal, testRunner, mainWindow, token, selectedScreen, isReExecuteFlag, testPlanItemId, recoveryState, onProgress, onInterrupted }) {
+    constructor({ testRunnerStepDataOriginal, testRunner, mainWindow, token, selectedScreen, isReExecuteFlag, testPlanItemId, recoveryState, onProgress, onInterrupted, mobileDriver = null }) {
         this.testRunnerStepDataOriginal = structuredClone(testRunnerStepDataOriginal);
         this.testRunnerSteps = structuredClone(testRunnerStepDataOriginal);
         this.testRunner = structuredClone(testRunner);
@@ -119,7 +124,7 @@ class FastTrackAutomation {
             );
         }
         this.webDriver = new WebActions();
-        this.mobileDriver = new MobileActionsRouter();
+        this.mobileDriver = mobileDriver || new MobileActionsRouter();
         this.selectedScreen = selectedScreen;
         this.isReExecuteFlag = isReExecuteFlag;
         this.onProgress = typeof onProgress === 'function' ? onProgress : null;
@@ -1329,15 +1334,6 @@ class FastTrackAutomation {
                 this.webDriver.driver = null;
             }
         }
-        if (this.mobileDriver?.driver && this?.mobileDriver?.driver?.capabilities) {
-            try {
-                await this.mobileDriver.driver.deleteSession();
-            } catch (error) {
-                console.log('mobile driver quit failed (ignored)', error.message || error);
-            } finally {
-                this.mobileDriver.driver = null;
-            }
-        }
     }
     async destorySession() {
         await this.destoryDrivers();
@@ -1573,20 +1569,36 @@ class FastTrackAutomation {
         }
     }
     async runAutomation() {
+        if (this.executionLoopActive) return;
+        this.executionLoopActive = true;
+        this.pauseReady = false;
         console.log(`[automation] starting runAutomation with ${this.testRunnerSteps?.length || 0} runner(s)`);
         this.emitProgress({ reason: 'run_started' }, false);
         try {
-            await this.iterateSteps();
-            const summary = this.buildEffectiveRunSummary();
-            if (this.cancelRequested) {
-                await this.finalizeCanceledExecution();
-            } else if (!this.isPaused) {
-                this.resetAutomationValues();
-                console.log('[automation] completed all runners');
-                this.emitProgress({ reason: 'run_completed', is_paused: false }, false);
+            while (true) {
+                await this.iterateSteps();
+                const summary = this.buildEffectiveRunSummary();
+                if (this.cancelRequested) {
+                    await this.finalizeCanceledExecution();
+                    return summary;
+                }
+                if (!this.isPaused) {
+                    this.resetAutomationValues();
+                    console.log('[automation] completed all runners');
+                    this.emitProgress({ reason: 'run_completed', is_paused: false }, false);
+                    return summary;
+                }
+                await new Promise(resolve => {
+                    this.pauseResumeResolver = resolve;
+                    this.pauseReady = true;
+                    this.sendExecutionControlState('paused');
+                });
+                this.pauseResumeResolver = null;
             }
-            return summary;
         } finally {
+            this.executionLoopActive = false;
+            this.pauseReady = this.isPaused && !this.cancelRequested && !this.pendingStepResolutionData;
+            this.sendExecutionControlState(this.pauseReady ? 'paused' : 'idle');
             if (!this.cancelRequested) {
                 this.resolveCancelCompletion();
             }
@@ -1614,7 +1626,6 @@ class FastTrackAutomation {
             }
 
             const runner = this.testRunnerSteps[i];
-            this.loopState = null;
             const runnerPerf = this.perfStart('runner', {
                 runnerIndex: i,
                 stepCount: runner?.steps?.length || 0,
@@ -1624,6 +1635,7 @@ class FastTrackAutomation {
             for (let j = startStepIndex; j < runner.steps.length; j++) {
                 console.log(i, j);
                 this.currentStep = j;
+                this.sendExecutionControlState(this.singleStepRequested ? 'stepping' : this.isPaused ? 'pausing' : 'running');
                 this.emitProgress({ reason: 'step_started' }, false);
                 const step = runner.steps[j];
                 this.emitActionStrip('action_step_started', 'main', step);
@@ -1673,6 +1685,7 @@ class FastTrackAutomation {
                     this.perfEnd(stepPerf, 'ok', {
                         loopAction: nextStepIndex <= j ? 'continue' : 'complete',
                     });
+                    if (this.finishStepControl(runner, j, nextStepIndex)) break;
                     j = nextStepIndex - 1;
                     continue;
                 }
@@ -1689,6 +1702,9 @@ class FastTrackAutomation {
                 let stepFailed = false;
                 let stepFailureError = null;
                 let afterLoopNextStepIndex = null;
+                let ifExistPassed = true;
+                let ifExistError = null;
+                if (step.comment === helperDispatch.IF_EXIST_COMMENT) delete step.comment;
 
                 step.value = this.resolveRuntimeValue(step.value);
                 this.normalizeExplicitIndexedStepValue(step);
@@ -1697,6 +1713,15 @@ class FastTrackAutomation {
                     const beforeSteps = step.before_step;
                     for (let beforeStepIndex = 0; beforeStepIndex < beforeSteps.length; beforeStepIndex++) {
                         const beforeStep = beforeSteps[beforeStepIndex];
+                        if (helperDispatch.isIfExist(beforeStep)) {
+                            try {
+                                ifExistPassed = await helperDispatch.runBeforeHelper(this, step, beforeStep);
+                            } catch (error) {
+                                ifExistError = error;
+                            }
+                            if (!ifExistPassed || ifExistError) break;
+                            continue;
+                        }
                         beforeStep.isLastTestCaseStep = step.isLastTestCaseStep;
                         const beforePerf = this.perfStart('before_step', {
                             runnerIndex: i,
@@ -1717,7 +1742,15 @@ class FastTrackAutomation {
                                 this.perfEnd(beforePerf, 'ok', { loopAction: loopControlResult.type });
                                 continue;
                             }
-                            await this.runStep({ ...beforeStep, highlight: false });
+                            if (helperDispatch.isMobileClear(beforeStep)) {
+                                await helperDispatch.runBeforeHelper(this, step, beforeStep);
+                            } else if (helperDispatch.isCaptureHelper(beforeStep)) {
+                                await helperDispatch.runCaptureHelper(this, step, { ...beforeStep, highlight: false });
+                            } else if (helperDispatch.isWaitHelper(beforeStep)) {
+                                await helperDispatch.runWaitHelper(this, step, { ...beforeStep, highlight: false });
+                            } else {
+                                await this.runStep({ ...beforeStep, highlight: false });
+                            }
                             this.emitActionStrip('action_passed', 'before', beforeStep);
                             if (this.shouldAbortForCancellation()) {
                                 console.log('[automation] cancel requested after before-step execution');
@@ -1743,7 +1776,12 @@ class FastTrackAutomation {
                 }
 
                 try {
-                    await this.observeMainAction(step);
+                    if (ifExistError) throw ifExistError;
+                    if (ifExistPassed) {
+                        await this.observeMainAction(step);
+                    } else {
+                        step.comment = helperDispatch.IF_EXIST_COMMENT;
+                    }
                     if (this.shouldAbortForCancellation()) {
                         console.log('[automation] cancel requested after main step execution');
                         break;
@@ -1759,7 +1797,9 @@ class FastTrackAutomation {
                             runnerIndex: this.currentRunner,
                             stepIndex: this.currentStep,
                             token: this.token,
-                            stepOverrides: this.buildStepLogOverrides(step),
+                            stepOverrides: !ifExistPassed
+                                ? { comment: helperDispatch.IF_EXIST_COMMENT }
+                                : this.buildStepLogOverrides(step),
                             runtimeConfig: getRuntimeConfig(),
                         });
                         if (this.shouldAbortForCancellation()) {
@@ -1786,6 +1826,17 @@ class FastTrackAutomation {
                         runner: this.testRunnerSteps,
                         currentRunner: this.currentRunner,
                     });
+                    let reExecuteDecision = null;
+                    if (this.isReExecuteFlag) {
+                        reExecuteDecision = this.openReExecuteDecision(step);
+                        this.isPaused = true;
+                        this.sendExecutionControlState('decision');
+                        this.mainWindow?.webContents?.send?.('openReExecuteDataModal', {
+                            step,
+                            runnerIndex: this.currentRunner,
+                            stepIndex: this.currentStep,
+                        });
+                    }
                     if (this.canPersistRunnerLogs()) {
                         const suiteId = this.getSuiteId(runner);
                         try {
@@ -1811,7 +1862,7 @@ class FastTrackAutomation {
                         }
                     }
 
-                    if (this.isReExecuteFlag) {
+                    if (reExecuteDecision) {
                         if (this.onInterrupted) {
                             try {
                                 await this.onInterrupted('paused_by_user');
@@ -1819,14 +1870,8 @@ class FastTrackAutomation {
                                 console.log('[automation] interrupted callback failed', interruptErr?.message || interruptErr);
                             }
                         }
-                        this.isPaused = true;
-                        this.mainWindow?.webContents?.send?.('openReExecuteDataModal', {
-                            step,
-                            runnerIndex: this.currentRunner,
-                            stepIndex: this.currentStep,
-                        });
                         this.emitProgress({ reason: 'paused' }, true);
-                        const decision = await this.openReExecuteDecision(step);
+                        const decision = await reExecuteDecision;
                         this.isPaused = false;
                         this.emitProgress({ reason: 'resumed', is_paused: false }, false);
                         if (decision?.action === 'reexecute') {
@@ -1856,7 +1901,7 @@ class FastTrackAutomation {
                     });
                 }
 
-                if (step.after_step && step.after_step.length > 0) {
+                if (ifExistPassed && !ifExistError && step.after_step && step.after_step.length > 0) {
                     const afterSteps = step.after_step;
                     for (let afterStepIndex = 0; afterStepIndex < afterSteps.length; afterStepIndex++) {
                         const afterStep = afterSteps[afterStepIndex];
@@ -1873,7 +1918,16 @@ class FastTrackAutomation {
                                 afterLoopNextStepIndex = loopControlResult.nextStepIndex;
                                 continue;
                             }
-                            await this.runStep({ ...afterStep, highlight: false });
+                            if (helperDispatch.isMobileClear(afterStep)) {
+                                throw new Error('mobileClear is supported as a before-step helper only.');
+                            }
+                            if (helperDispatch.isCaptureHelper(afterStep)) {
+                                await helperDispatch.runCaptureHelper(this, step, { ...afterStep, highlight: false });
+                            } else if (helperDispatch.isWaitHelper(afterStep)) {
+                                await helperDispatch.runWaitHelper(this, step, { ...afterStep, highlight: false });
+                            } else {
+                                await this.runStep({ ...afterStep, highlight: false });
+                            }
                             this.emitActionStrip('action_passed', 'after', afterStep);
                             if (this.shouldAbortForCancellation()) {
                                 console.log('[automation] cancel requested after after-step execution');
@@ -1948,13 +2002,11 @@ class FastTrackAutomation {
                 if (!stepFailed) {
                     this.perfEnd(stepPerf, 'ok');
                 }
+                const nextStepIndex = Number.isFinite(afterLoopNextStepIndex) ? afterLoopNextStepIndex : j + 1;
+                if (this.finishStepControl(runner, j, nextStepIndex)) break;
                 if (Number.isFinite(afterLoopNextStepIndex)) {
                     j = afterLoopNextStepIndex - 1;
                     continue;
-                }
-                if (this.isPaused) {
-                    this.emitProgress({ reason: 'run_interrupted' }, true);
-                    break;
                 }
             }
 
@@ -1969,6 +2021,10 @@ class FastTrackAutomation {
 
 
                 await this.saveAndCloseSuite(runner);
+                if (this.isPaused && !this.cancelRequested) {
+                    this.pauseAtNextRunner = i + 1 < this.testRunnerSteps.length;
+                    this.isPaused = false;
+                }
 
 
             }
@@ -1976,6 +2032,13 @@ class FastTrackAutomation {
             if (!this.isPaused) {
                 this.currentStep = 0;
                 this.loopState = null;
+            }
+            if (this.pauseAtNextRunner && !this.cancelRequested) {
+                this.pauseAtNextRunner = false;
+                this.currentRunner = i + 1;
+                this.isPaused = true;
+                this.emitProgress({ reason: 'paused' }, true);
+                break;
             }
             this.emitProgress({ reason: this.isPaused ? 'paused' : 'runner_completed' }, this.isPaused);
             this.perfEnd(runnerPerf, this.isPaused ? 'paused' : 'ok', {
@@ -2047,6 +2110,10 @@ class FastTrackAutomation {
         this.currentStep = 0;
         this.currentRunner = 0;
         this.isPaused = false;
+        this.singleStepRequested = false;
+        this.pauseReady = false;
+        this.pauseAtNextRunner = false;
+        this.sendExecutionControlState('idle');
         this.cancelRequested = false;
         this.pendingStepResolution = null;
         this.pendingStepResolutionData = null;
@@ -2104,6 +2171,11 @@ class FastTrackAutomation {
             });
         }
         this.cancelRequested = true;
+        this.pauseResumeResolver?.();
+        this.singleStepRequested = false;
+        this.pauseReady = false;
+        this.pauseAtNextRunner = false;
+        this.sendExecutionControlState('idle');
         this.isPaused = true;
         this.clearReExecuteModal();
         this.emitProgress({ reason: 'run_interrupted', is_paused: true }, true);
@@ -2132,31 +2204,57 @@ class FastTrackAutomation {
         return true;
     }
 
-    pauseExecution() {
-        if (this.isPaused) return;
-        console.log(
-            'paused at: \ntest case: ' +
-                this.currentRunner +
-                '\nstep number: ' +
-                this.currentStep,
-        );
-        this.currentStep++;
-        this.isPaused = true;
-        console.log(this.isPaused);
-        this.emitProgress({ reason: 'paused' }, true);
+
+    sendExecutionControlState(mode) {
+        this.mainWindow?.webContents?.send?.('executionControlState', {
+            mode: this.cancelRequested ? 'idle' : mode,
+        });
     }
-    resumeExecution() {
-        console.log('in resume', this.isPaused);
-        if (!this.isPaused) return;
-        console.log(
-            'resume from: \ntest case: ' +
-                this.currentRunner +
-                '\nstep number: ' +
-                this.currentStep,
-        );
+
+    finishStepControl(runner, stepIndex, nextStepIndex) {
+        if (this.cancelRequested || (!this.isPaused && !this.singleStepRequested)) return false;
+        const step = runner.steps[stepIndex];
+        const nextStep = runner.steps[nextStepIndex];
+        const groupId = step.parent ?? step.id;
+        if (nextStepIndex === stepIndex + 1 && nextStep?.parent != null && nextStep.parent === groupId) {
+            return false;
+        }
+        this.singleStepRequested = false;
+        this.currentStep = nextStepIndex;
+        if (nextStepIndex >= runner.steps.length) {
+            this.pauseAtNextRunner = this.currentRunner + 1 < this.testRunnerSteps.length;
+            this.isPaused = false;
+            return false;
+        }
+        this.isPaused = true;
+        return true;
+    }
+
+    pauseExecution() {
+        if (this.cancelRequested || this.isPaused) return false;
+        this.isPaused = true;
+        this.pauseReady = false;
+        this.sendExecutionControlState('pausing');
+        this.emitProgress({ reason: 'paused' }, true);
+        return true;
+    }
+
+    resumeExecution(singleStep = false) {
+        if (this.cancelRequested || this.pendingStepResolutionData) return false;
+        if (singleStep && (!this.isPaused || !this.pauseReady)) return false;
+        if (!this.isPaused && !this.singleStepRequested && !this.pauseAtNextRunner) return false;
+        this.singleStepRequested = singleStep;
+        this.pauseAtNextRunner = false;
+        this.pauseReady = false;
         this.isPaused = false;
+        this.sendExecutionControlState(singleStep ? 'stepping' : 'running');
         this.emitProgress({ reason: 'resumed', is_paused: false }, false);
-        this.runAutomation();
+        if (this.pauseResumeResolver) {
+            this.pauseResumeResolver();
+        } else if (!this.executionLoopActive) {
+            this.runAutomation();
+        }
+        return true;
     }
 
     reExecuteStep() {

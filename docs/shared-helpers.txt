@@ -1,0 +1,54 @@
+Shared before-step helpers
+
+The supported before-step helpers include `ifExist` and `mobileClear`. Shared `waitForElement` and `waitForText` helpers route to web, Android, or iOS in both before-step and after-step phases. Existing web wait implementations and helper failure behavior are unchanged.
+
+## ifExist contract
+
+Attach `ifExist` as a before-step helper. Leave its value empty to inherit the main step's locator, or provide a plain locator, `target=...`, `scope=...`, or `xpath=...`. Here `scope` is an alias for the target, not a separate search root.
+
+The main step determines the provider through `executionTarget`, `execution_target`, or `target` (`web`, `android`, or `ios`). Without metadata, the helper dispatcher resolves supported provider methods by exact action name, case-insensitively. Mobile actions use the router's active platform. No keyword prefix is used for helper routing. API, Windows, unknown targets, and unresolved actions fail clearly.
+
+Provider methods return only a boolean:
+- Present: execute the main action normally.
+- Absent: do not execute the main action or its remaining before/after helpers; report the main step as passed with:
+  `Passed automatically: IfExist condition not met (element not found), step skipped.`
+- Missing/unsupported/invalid locators and inactive/broken sessions fail the main step. They are never converted to absence.
+
+The helper receives no separate persisted result. Its decision is local to the current step attempt.
+
+## Lookups
+
+Web supports XPath, id, name, css, linkText, partialLinkText, and tagName in the current lookup context. Android supports XPath, id, accessibilityId, and android. iOS supports XPath, id, accessibilityId, iosPredicate, and iosClassChain.
+
+The existing main-step `N[]value` explicit index is inherited when using the main locator. A helper-owned locator does not inherit the parent's index. Explicit indices are positive and one-based. Native XPath predicates remain intact.
+
+Lookups do not test visibility or poll. The helper temporarily sets the active session's implicit timeout to zero and restores it afterward, including on error. Driver/session lifecycle and normal action lookup are unchanged.
+
+## Extension boundary
+
+`helperDispatch.resolveHelperProvider` selects a provider independently of driver implementation. `helperLookup` supplies input validation and temporary timeout handling. Driver operations stay in each provider's helper method.
+
+A future helper requires an approved input/result/error contract and supported-target definition before adding its preparation and runner outcome handling. Adding a provider method alone does not migrate an existing helper.
+
+## Validation
+
+- `node scripts/ifexist_regression.js`: mocked Web/Appium providers plus actual runner/reporting flow.
+- `node scripts/ifexist_browser_smoke.js`: real headless Chrome, including iframe scope and implicit-timeout restoration.
+
+Connected Android/iOS device checks remain a separate release validation.
+
+## mobileClear contract
+
+Use mobileClear as a before-step helper on an Android or iOS main action, for example mobileClear followed by mobileFill. An empty helper value inherits the main locator and explicit one-based index. A plain locator, target=..., scope=..., or xpath=... overrides the locator and does not inherit the main index.
+
+The selected provider locates the field using its platform locator parser and calls clearValue(). No typing, fallback key sequences, extra polling, or driver lifecycle changes are introduced. Missing elements, invalid locators, unsupported execution targets, inactive sessions, and clear errors are logged by the helper flow and execution continues to the main step. Only the main action determines its Passed/Failed result. There is no separate persisted helper result or automatic-pass comment.
+
+Only before-step attachment is supported. An after-step mobileClear attachment logs an unsupported-phase error without clearing anything or changing the main step result. Existing helper behavior outside mobileClear is unchanged.
+
+The player consumes helper names from the test payload; the frontend helper catalog is server-managed. Register mobileClear in the existing Before/After Helper Steps admin screen where needed, with an optional locator value. No database/catalog rows are changed by this player patch.
+
+Run node scripts/mobile_clear_regression.js for mocked Android/iOS provider, locator, dispatch, and runner-reporting checks. Validate native clearing on connected Android/iOS devices before release.
+
+## Separate mobileFill typo fix
+
+The player picker uses mobileFill. The misspelled mobileFll keyword is not supported. No stored steps or mobileFill implementation are rewritten.

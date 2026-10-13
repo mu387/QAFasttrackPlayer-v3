@@ -96,9 +96,10 @@
         <li class=" nav-link dark:!text-slate-200 bg-red-900 hover:!bg-red-700 text-base hidden d-none" id="stopExecution"><i
             class="bi bi-stop-circle"></i> <span> Stop
             Execution</span></li>
-        <li class=" nav-link dark:!text-slate-200 text-base hidden bg-blue-900 hover:!bg-blue-700 " id="resume"><i
+        <li class=" nav-link dark:!text-slate-200 text-base hidden bg-blue-900 hover:!bg-blue-700 flex items-center gap-2" id="resume"><i
             class="bi bi-repeat"></i> <span> Resume
-            Execution</span></li>
+            Execution</span>
+          <button type="button" id="nextStepExecution" class="btn btn-outline-light btn-sm shrink-0 whitespace-nowrap hidden d-none" disabled>Next Step</button></li>
         <li class=" nav-link dark:!text-slate-400 text-base flex items-center gap-2" id="captureXpath">
           <div id="spyIndicator" class="h-3 w-3 rounded-full bg-gray-400"></div>
           <span>Spy Objects</span>
@@ -600,7 +601,7 @@
           </div>
         </div>
 
-   <div class="accordion accordion-flush shadow-sm border border-slate-300 dark:!border-slate-800 rounded-4 overflow-hidden" id="textActions">
+   <div class="accordion accordion-flush shadow-sm border border-slate-300 dark:!border-slate-800 rounded-4 overflow-hidden">
         <div id="runnerWorkspace" class="rounded-[28px] border border-slate-400 dark:!border-slate-800 bg-slate-300 dark:!bg-slate-950 p-3 shadow-sm">
         <div class="accordion accordion-flush shadow-sm border border-slate-300 dark:!border-slate-800 rounded-4 overflow-hidden" id="textActions">
           <div class="accordion-item  dark:!border-slate-800">

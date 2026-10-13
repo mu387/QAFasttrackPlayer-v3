@@ -1,0 +1,22 @@
+Paused execution: Next Step
+
+Pause finishes the current main step and its configured helpers before enabling Next Step beside Resume.
+
+- Next Step uses the existing Resume path with a one-step allowance.
+- The allowance covers one main step, including grouped keyword actions and before/after helpers.
+- Next Step is disabled while that step is running.
+- Resume during the step removes the allowance; execution continues after the current step finishes.
+- Failed-step decisions still require the existing retry/pass/fail controls.
+- An ifExist automatic pass consumes one step without executing the main action.
+- Loop position is retained between individual advances.
+- The final step completes the run normally, rather than leaving an empty paused run.
+- Stop clears the allowance and releases a paused execution wait.
+- The original run stays pending while paused, so Stop can still address it.
+
+No keyword, driver teardown, backend, or queue endpoint implementation is changed.
+
+## Regression check
+
+Run `node scripts/step_control_regression.js` from the Player repository.
+The check uses the actual engine and renderer control handlers with stubbed actions and I/O; it does not operate a browser or device.
+Also smoke-test Pause, Next Step, Resume, and Stop in the packaged Player before release.

@@ -1,5 +1,6 @@
 const visibleWait = require('../../utils/visibleWait');
 const { PDFDocument } = require('pdf-lib');
+const helperLookup = require('./helperLookup');
 const axios = require('axios');
 const fsSync = require('fs');
 const fs = require('fs').promises;
@@ -1725,7 +1726,9 @@ class WebActions {
            await this.destroyTrackedDrivers();
         }
         const browserKey = typeof step?.value === 'string' ? step.value.trim().toUpperCase() : '';
-        const browserName = Browser[browserKey] || (typeof step?.value === 'string' ? step.value.trim().toLowerCase() : '');
+        const browserName = Object.hasOwn(Browser, browserKey)
+            ? Browser[browserKey]
+            : Object.values(Browser).find(name => name.toUpperCase() === browserKey);
         if (!browserName) {
             const expected = Object.keys(Browser).join(', ');
             throw new Error(`Invalid browser value '${step?.value}'. Expected one of: ${expected}`);
@@ -2510,6 +2513,28 @@ class WebActions {
             () => visibleWait.lookup(this.driver, this.currentContext, config.scope, path => this.findElementBy(path), true).then(elements => elements.slice(0, 1)),
             () => this.driver.executeScript('return window.__qaCurrentShadowRoot || arguments[0] || document.body;', this.currentContext === this.driver ? null : this.currentContext));
     };
+    async ifExist(step) {
+        const index = helperLookup.explicitTargetIndex(step);
+        const selector = helperLookup.parseLocator(step.xPath, {
+            xpath: value => By.xpath(value),
+            id: value => By.id(value),
+            name: value => By.name(value),
+            css: value => By.css(value),
+            linktext: value => By.linkText(value),
+            partiallinktext: value => By.partialLinkText(value),
+            tagname: value => By.tagName(value),
+        });
+        if (!this.driver || !await this.driver.getSession()) {
+            throw new Error('ifExist requires an active WebDriver session.');
+        }
+        const manager = this.driver.manage();
+        const elements = await helperLookup.immediateLookup(
+            () => manager.getTimeouts(),
+            timeouts => manager.setTimeouts(timeouts),
+            () => (this.currentContext || this.driver).findElements(selector),
+        );
+        return index == null ? elements.length > 0 : Boolean(elements[index - 1]);
+    }
     async existold(step) {
         return await this.findElement(step.xPath, step);
     };

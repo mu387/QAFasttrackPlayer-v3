@@ -1,0 +1,17 @@
+Shared getElementValue helper
+
+Use getElementValue=:gettext, getElementValue=:value, or an explicit attribute/property
+in before or after helpers. The linked main step selects web, Android, or iOS.
+Native capture inherits the main locator and explicit element index.
+Supported properties: gettext, isSelected, isEnabled, isDisplayed.
+Other names request the native attribute verbatim. selection remains web-only.
+
+Captured values are available to later steps through {{u_capture}} in SaaS and OnPrem.
+Existing SaaS {{web_capture}} remains web-only; native capture does not overwrite it.
+Native lookup/capture errors are logged by the helper flow, clear the native capture,
+and do not fail the main step. Helpers have no separate persisted result.
+Null captures retain existing unresolved-token behavior.
+Existing web capture, standalone keywords, sessions and driver lifecycle are unchanged.
+
+Regression: node scripts/mobile_capture_regression.js
+Physical Android/iOS device validation remains required.
