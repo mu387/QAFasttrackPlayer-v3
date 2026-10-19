@@ -1,7 +1,7 @@
 {
   "name": "qafasttrack-local-player",
   "productName": "QAFastTrack Local Player",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
