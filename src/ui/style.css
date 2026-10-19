@@ -1154,3 +1154,20 @@ body {
 }
 
 .app-update-dismiss:hover { color: #e2e8f0; }
+
+/* Installed runner version chip */
+.app-version-chip {
+  position: fixed;
+  right: 10px;
+  bottom: 8px;
+  z-index: 2500;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.app-version-chip[data-state="ready"] { color: #2dd4bf; font-weight: 600; }

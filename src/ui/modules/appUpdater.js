@@ -33,6 +33,7 @@
     const textEl = documentRef.getElementById('appUpdateText');
     const actionEl = documentRef.getElementById('appUpdateAction');
     const dismissEl = documentRef.getElementById('appUpdateDismiss');
+    const versionChip = documentRef.getElementById('appVersionChip');
 
     let dismissedKey = '';
 
@@ -44,8 +45,30 @@
       banner.classList.remove('d-none');
     };
 
+    const renderVersion = state => {
+      if (!versionChip) return;
+      const version = (state && state.currentVersion) || '';
+      if (!version) {
+        versionChip.classList.add('d-none');
+        return;
+      }
+      versionChip.classList.remove('d-none');
+      versionChip.textContent = state.status === 'ready' ? `v${version} · update ready` : `v${version}`;
+      versionChip.dataset.state = state.status || '';
+      versionChip.title = state.status === 'ready'
+        ? `Installed version ${version}. An update is downloaded and will install on restart.`
+        : `Installed version ${version}`;
+    };
+
     const render = state => {
-      if (!state || SILENT.has(state.status)) {
+      if (!state) {
+        hide();
+        return;
+      }
+
+      renderVersion(state);
+
+      if (SILENT.has(state.status)) {
         hide();
         return;
       }
