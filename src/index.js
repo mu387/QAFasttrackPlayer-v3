@@ -18,9 +18,52 @@ const {
   buildInitialJournal,
 } = require('./utils/runJournal');
 
-const envName = process.env.APP_ENV || 'staging';
 const appRoot = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..');
-dotenv.config({ path: path.join(appRoot, `.env.${envName}`) });
+
+// A build packages exactly one `.env.<name>` file, and a client machine never has APP_ENV
+// set, so pick the file that is actually present instead of assuming a name. An explicit
+// APP_ENV always wins. Without this a prod build silently starts with no config (no feed).
+const resolveEnvFile = (root, requested) => {
+  const exists = (file) => {
+    try {
+      return fs.existsSync(file);
+    } catch (error) {
+      return false;
+    }
+  };
+
+  if (requested) {
+    const explicit = path.join(root, `.env.${requested}`);
+    return { file: explicit, name: requested, exists: exists(explicit) };
+  }
+
+  const preferred = ['prod', 'staging', 'local', 'uat', 'development'];
+  for (const name of preferred) {
+    const file = path.join(root, `.env.${name}`);
+    if (exists(file)) return { file, name, exists: true };
+  }
+
+  try {
+    const fallback = fs
+      .readdirSync(root)
+      .find((entry) => /^\.env\.[A-Za-z0-9_-]+$/.test(entry) && entry !== '.env.example');
+    if (fallback) {
+      return { file: path.join(root, fallback), name: fallback.replace(/^\.env\./, ''), exists: true };
+    }
+  } catch (error) {
+    // unreadable app root: fall through to the unconfigured warning below
+  }
+
+  return { file: path.join(root, `.env.${requested || 'staging'}`), name: requested || 'staging', exists: false };
+};
+
+const resolvedEnv = resolveEnvFile(appRoot, process.env.APP_ENV);
+if (resolvedEnv.exists) {
+  dotenv.config({ path: resolvedEnv.file });
+  if (!app.isPackaged) console.log(`[env] loaded ${path.basename(resolvedEnv.file)}`);
+} else {
+  console.warn(`[env] no .env.* file found in ${appRoot}; starting without packaged configuration`);
+}
 const queueWorkerConfigPath = () => path.join(app.getPath('userData'), 'queue-worker-config.json');
 const runJournalPath = () => path.join(app.getPath('userData'), 'active-run-journal.json');
 const RUNNER_PROTOCOL = 'qafasttrack-runner';
