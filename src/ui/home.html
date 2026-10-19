@@ -33,6 +33,17 @@
 
 <body class="bg-whit !bg-neutral-150 dark:!text-slate-400">
 
+  <!-- Runner update banner: hidden until the updater reports something actionable -->
+  <div id="appUpdateBanner" class="app-update-banner d-none" role="status" aria-live="polite">
+    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+    <span id="appUpdateText" class="app-update-text"></span>
+    <button type="button" id="appUpdateAction" class="app-update-btn" data-action="">Restart to update</button>
+    <button type="button" id="appUpdateDismiss" class="app-update-dismiss" aria-label="Dismiss">&times;</button>
+  </div>
+
+  <!-- Installed runner version -->
+  <div id="appVersionChip" class="app-version-chip d-none">v-</div>
+
   <!-- Splash Screen -->
   <div id="qaf-splash" class="active">
     <div class="qaf-logo-wrap">
@@ -979,6 +990,7 @@
   <script src="modules/reExecuteFlow.js" defer></script>
   <script src="modules/serverDeviceControls.js" defer></script>
   <script src="modules/queueWorkerSetup.js" defer></script>
+<script src="modules/appUpdater.js" defer></script>
   <script src="home.js" defer></script>
   <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
     integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"

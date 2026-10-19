@@ -1,7 +1,7 @@
 {
   "name": "qafasttrack-local-player",
   "productName": "QAFastTrack Local Player",
-  "version": "1.0.24",
+  "version": "1.0.26",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
@@ -15,9 +15,13 @@
     "package:staging": "cross-env APP_ENV=staging env-cmd -f .env.staging electron-forge package",
     "package:prod": "cross-env APP_ENV=prod env-cmd -f .env.prod electron-forge package",
     "make": "electron-forge make",
+    "postmake": "node scripts/fix-releases.js",
     "make:local": "cross-env APP_ENV=local env-cmd -f .env.local electron-forge make",
+    "postmake:local": "node scripts/fix-releases.js",
     "make:staging": "cross-env APP_ENV=staging env-cmd -f .env.staging electron-forge make",
+    "postmake:staging": "node scripts/fix-releases.js",
     "make:prod": "cross-env APP_ENV=prod env-cmd -f .env.prod electron-forge make",
+    "postmake:prod": "node scripts/fix-releases.js",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\"",
     "test:api-regression": "node scripts/api_engine_regression.js && node scripts/api_parity_smoke.js",
