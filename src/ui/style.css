@@ -1107,3 +1107,50 @@ body {
   line-height: 1.2;
   color: #f8fafc !important;
 }
+
+/* Runner self-update banner */
+.app-update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.45);
+  font-size: 13px;
+}
+
+.app-update-banner[data-state="ready"] { background: #0b3b34; }
+.app-update-banner[data-state="error"] { border-bottom-color: rgba(248, 113, 113, 0.55); }
+
+.app-update-text { flex: 1 1 auto; }
+
+.app-update-btn {
+  border: 1px solid rgba(45, 212, 191, 0.6);
+  background: #2dd4bf;
+  color: #04231f;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.app-update-btn:hover { filter: brightness(1.05); }
+
+.app-update-dismiss {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.app-update-dismiss:hover { color: #e2e8f0; }

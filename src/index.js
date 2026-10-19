@@ -31,6 +31,7 @@ const { stepLogCall } = require('./utils/stepLog');
 const { getStepLogUrl, getUploadVideoUrl } = require('./utils/endpoint');
 const { setRuntimeConfig, getRuntimeConfig } = require('./utils/runtimeConfig');
 const { LocalQueueWorker } = require('./utils/localQueueWorker');
+const { createAppUpdater, registerAppUpdaterIpc } = require('./utils/appUpdater');
 const { FastTrackAutomation } = require('../src/ui/automation/index');
 const { MobileActionsRouter } = require('./ui/automation/mobileActionsRouter');
 const { executeManualMobileKeyword } = require('./ui/automation/manualMobileKeywords');
@@ -198,6 +199,7 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 let mainWindow;
+let appUpdater = null;
 let webServerPort = parseInt(process.env.WEBDRIVER_PORT, 10) || 3009;
 let pendingProtocolUrl = null;
 let pendingRunnerSetupPayload = null;
@@ -1073,6 +1075,16 @@ app.on('ready', () => {
   isReExecuteFlag = persisted.reExecuteOnFail === true || persisted.reExecuteOnFail === 'true';
   executionDelayMs = getPersistedExecutionDelay();
   pendingProtocolUrl = extractProtocolFromArgv(process.argv) || pendingProtocolUrl;
+
+  // Self-update: feed + mode come from the packaged .env.<env> file.
+  appUpdater = createAppUpdater({
+    feedUrl: process.env.UPDATE_FEED_URL || '',
+    downloadUrl: process.env.UPDATE_DOWNLOAD_URL || process.env.UPDATE_FEED_URL || '',
+    mode: process.env.UPDATE_MODE || 'auto',
+  });
+  registerAppUpdaterIpc(appUpdater);
+  appUpdater.start();
+
   createWindow();
 });
 

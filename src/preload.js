@@ -28,6 +28,18 @@ let currentRunner = 0;
 let isPaused = false;
 let testRunnerStepData = null;
 
+contextBridge.exposeInMainWorld('appUpdater', {
+  getStatus: () => ipcRenderer.invoke('updater:getStatus'),
+  check: () => ipcRenderer.invoke('updater:check'),
+  restart: () => ipcRenderer.invoke('updater:restart'),
+  openDownload: () => ipcRenderer.invoke('updater:openDownload'),
+  onStatus: callback => {
+    const handler = (_event, payload) => callback(payload);
+    ipcRenderer.on('updater:status', handler);
+    return () => ipcRenderer.removeListener('updater:status', handler);
+  },
+});
+
 contextBridge.exposeInMainWorld('express', {
   startServer: port => ipcRenderer.invoke('startServer', port),
   stopServer: () => ipcRenderer.invoke('stopServer'),
