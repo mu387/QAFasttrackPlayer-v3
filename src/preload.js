@@ -203,7 +203,8 @@ async function stopRecording({ testRunnerId, suiteId, token }) {
   formData.append('test_runner_id', testRunnerId);
   formData.append('test_suite_id', suiteId);
   const videoFile = new File([blob], 'video.webm');
-  formData.append('videos', videoFile);
+  // Original purpose of this duplicate field is unknown; revisit later. Keep videos[0] for the backend array.
+  // formData.append('videos', videoFile);
   formData.append('videos[0]', videoFile);
   console.log('Uploading screen recording', { sizeBytes: blob.size });
   console.time('screenRecording:upload');
